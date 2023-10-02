@@ -142,7 +142,7 @@ def programme_principal() -> None:
     questions = choisir_questions(toutes_les_questions, 21)
 
     fenetre = afficher_jeu()
-    temps_restant = 60
+    temps_restant = 500
     prochaine_question = 0
     decompte_actif = False
 
