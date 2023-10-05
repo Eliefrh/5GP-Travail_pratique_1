@@ -40,6 +40,18 @@ police_question = (gui.DEFAULT_FONT, 30, 'normal')
 police_reponses = (gui.DEFAULT_FONT, 20, 'normal')
 police_ou = (gui.DEFAULT_FONT, 20, 'italic')
 
+import base64
+
+with open('LogoAntibug.jpg', 'rb') as image_file:
+    base64_bytes = base64.b64encode(image_file.read())
+   # print(base64_bytes)
+
+    base64_string = base64_bytes.decode()
+    print(base64_string)
+
+
+
+
 def splasher_equipe(temps_ms: int) -> None:
 
     gui.Window('Monsieur Tartempion', [[gui.Image(data=equipe_base64())]], # transparent_color=gui.theme_background_color(),
