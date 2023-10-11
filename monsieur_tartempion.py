@@ -42,14 +42,11 @@ police_ou = (gui.DEFAULT_FONT, 20, 'italic')
 
 import base64
 
-with open('LogoAntibug.jpg', 'rb') as image_file:
-    base64_bytes = base64.b64encode(image_file.read())
-   # print(base64_bytes)
-
-    base64_string = base64_bytes.decode()
-    print(base64_string)
-
-
+# with open('LogoAntibug.png', 'rb') as image_file:
+#     base64_bytes = base64.b64encode(image_file.read())
+#
+#     base64_string = base64_bytes.decode()
+#     print(base64_string)
 
 
 def splasher_equipe(temps_ms: int) -> None:
