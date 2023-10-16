@@ -51,7 +51,7 @@ import base64
 
 def splasher_equipe(temps_ms: int) -> None:
 
-    gui.Window('Monsieur Tartempion', [[gui.Image(data=equipe_base64())]], # transparent_color=gui.theme_background_color(),
+    gui.Window('Monsieur Tartempion', [[gui.Image(data=equipe_base64())]],  #transparent_color=gui.theme_background_color(),
                no_titlebar=True, keep_on_top=True).read(timeout=temps_ms, close=True)
 
 def splacher_titre(delai: int, pardessus: bool) -> None:
