@@ -48,8 +48,6 @@ def afficher_images(temps_ms_equipe: int, temps_ms_titre: int) -> None:
                no_titlebar=True, keep_on_top=True).read(timeout=temps_ms_titre, close=True)
 
 
-# def splacher_titre(delai: int, pardessus: bool) -> None:
-
 
 def afficher_jeu() -> gui.Window:
     title = [gui.Text('Monsieur Tartempion', key='TITLE', font=police_titre)]
