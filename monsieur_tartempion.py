@@ -241,5 +241,6 @@ def programme_principal() -> None:
     fenetre.close()
     del fenetre
 
+if __name__ == '__main__':
 
-programme_principal()
+    programme_principal()
