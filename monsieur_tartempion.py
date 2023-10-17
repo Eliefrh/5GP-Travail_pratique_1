@@ -31,6 +31,7 @@ from images import *
 from indicateurs import Indicateur
 
 NB_QUESTIONS = 21
+TEMPS_EPREUVE = 60
 type_font = gui.DEFAULT_FONT
 police_titre = (type_font, 40, 'italic')
 police_etiquettes = (type_font, 20, 'normal')
@@ -84,11 +85,15 @@ def afficher_jeu() -> gui.Window:
     return fenetre
 
 
+# Élimination erreur
+#Répétition du code
+"""
+Exactement le meme code que la méthode effacer_question
 def effacer_question_affichee(fenetre: gui.Window) -> None:
     fenetre['BOUTON-GAUCHE'].update('', disabled=True, visible=True)
     fenetre['QUESTION'].update("")
     fenetre['OU'].update(text_color=gui.theme_background_color())
-    fenetre['BOUTON-DROIT'].update('', disabled=True, visible=True)
+    fenetre['BOUTON-DROIT'].update('', disabled=True, visible=True)"""
 
 
 def charger_questions(fichier_db: str) -> list:
@@ -101,8 +106,8 @@ def charger_questions(fichier_db: str) -> list:
     return [(enregistrement[0], enregistrement[1], enregistrement[2]) for enregistrement in resultat_requete]
 
 
-def choisir_questions(banque: list, nombre: int) -> list:
-    return [[question, Indicateur.VIDE] for question in random.choices(banque, k=nombre)]
+def choisir_questions(liste_de_questions: list, nombre_de_questions: int) -> list:
+    return [[question, Indicateur.VIDE] for question in random.choices(liste_de_questions, k=nombre_de_questions)]
 
 
 def melanger_reponses(reponses: tuple) -> tuple:
@@ -120,7 +125,7 @@ def splasher_succes() -> None:
                no_titlebar=True, keep_on_top=True).read(timeout=3000, close=True)
 
 
-def afficher(fenetre: gui.Window, question: tuple) -> None:
+"""def afficher(fenetre: gui.Window, question: tuple) -> None:
     fenetre['QUESTION'].update(question[0])
     reponses = melanger_reponses((question[1], question[2]))
     fenetre['BOUTON-GAUCHE'].update(reponses[0], disabled=False, visible=True)
@@ -132,7 +137,23 @@ def effacer_question(fenetre: gui.Window) -> None:
     fenetre['QUESTION'].update('')
     fenetre['BOUTON-GAUCHE'].update('', disabled=True, visible=True)
     fenetre['OU'].update(text_color=gui.theme_background_color())
-    fenetre['BOUTON-DROIT'].update('', disabled=True, visible=True)
+    fenetre['BOUTON-DROIT'].update('', disabled=True, visible=True)"""
+
+
+def afficher(fenetre: gui.Window, question: tuple) -> None:
+    fenetre['QUESTION'].update(question[0])
+    reponses = melanger_reponses((question[1], question[2]))
+    mettre_a_jour_widgets(fenetre, reponses, False,'white')
+
+def effacer_question(fenetre: gui.Window) -> None:
+    mettre_a_jour_widgets(fenetre, ('', '', ''), True, gui.theme_background_color())
+
+# Correction erreur 6
+# Duplication élliminée
+def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif: bool, couleur_text: str) -> None:
+    fenetre['BOUTON-GAUCHE'].update(reponses[0], disabled=bouton_est_actif, visible=True)
+    fenetre['OU'].update(text_color=couleur_text)
+    fenetre['BOUTON-DROIT'].update(reponses[1], disabled=bouton_est_actif, visible=True)
 
 
 def programme_principal() -> None:
@@ -205,7 +226,7 @@ def programme_principal() -> None:
                 elif 21 <= prochaine_question:
                     decompte_actif = False
                     fenetre.hide()
-                    effacer_question_affichee(fenetre)
+                    effacer_question(fenetre)
                     for i in range(NB_QUESTIONS):
                         fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
                         questions[i][1] = Indicateur.VIDE
