@@ -160,6 +160,7 @@ def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif
 
 
 def programme_principal() -> None:
+    afficher_images('equipe', 1500)
     afficher_images('titre', 2000)
     """Despote suprême de toutes les fonctions."""
     gui.theme('Black')
