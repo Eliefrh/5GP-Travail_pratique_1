@@ -41,13 +41,27 @@ police_reponses = (type_font, 20, 'normal')
 police_choix = (type_font, 20, 'italic')
 
 
-def afficher_images(temps_ms_equipe: int, temps_ms_titre: int) -> None:
-    gui.Window('Monsieur Tartempion', [[gui.Image(data=equipe_base64())]],
-               no_titlebar=True, keep_on_top=True).read(timeout=temps_ms_equipe, close=True)
+def afficher_images(objet: str, temps: int) -> None:
+    """Affiche une fenêtre avec une image en fonction de l'objet donné.
 
-    gui.Window('Monsieur Tartempion', [[gui.Image(data=titre_base64())]],
-               no_titlebar=True, keep_on_top=True).read(timeout=temps_ms_titre, close=True)
-
+    param objet: Une chaîne de caractères représentant l'objet.
+    param temps: Le temps d'affichage de la fenêtre en millisecondes.
+    """
+    match objet:
+        case 'equipe':
+             gui.Window('Monsieur Tartempion', [[gui.Image(data=equipe_base64())]],
+                              no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
+        case 'titre':
+             gui.Window('Monsieur Tartempion', [[gui.Image(data=titre_base64())]],
+                              no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
+        case 'echec':
+             gui.Window('Monsieur Tartempion', [[gui.Image(data=echec_base64())]],
+                              transparent_color=gui.theme_background_color(),
+                              no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
+        case 'succes':
+             gui.Window('Monsieur Tartempion', [[gui.Image(data=succes_base64())]],
+                              transparent_color="maroon2", no_titlebar=True,
+                              keep_on_top=True).read(timeout=temps, close=True)
 
 def afficher_jeu() -> gui.Window:
     title = [gui.Text('Monsieur Tartempion', key='TITLE', font=police_titre)]
@@ -77,9 +91,9 @@ def afficher_jeu() -> gui.Window:
     indicateurs = \
         [gui.Image(data=indicateur_vide_base64(), key=f'INDICATEUR-{i}', pad=(4, 10)) for i in range(NB_QUESTIONS)]
 
-    fenetre = gui.Window('Monsieur Tartempion', [title, temps, boutons_reponse, question, action, indicateurs],
-                         keep_on_top=True, element_padding=(0, 0),
-                         element_justification='center', resizable=False, finalize=True)
+    fenetre = gui.Window('Monsieur Tartempion', [title, temps, boutons_reponse,
+                                                 question, action, indicateurs], keep_on_top=True,
+                         element_padding=(0, 0), element_justification='center', resizable=False, finalize=True)
     return fenetre
 
 
@@ -110,17 +124,6 @@ def melanger_reponses(reponses: tuple) -> tuple:
     return (reponses[0], reponses[1]) if bool(random.getrandbits(1)) else (reponses[1], reponses[0])
 
 
-def splasher_echec(temps_ms: int) -> None:
-    gui.Window('Monsieur Tartempion', [[gui.Image(data=echec_base64())]],
-               transparent_color=gui.theme_background_color(),
-               no_titlebar=True, keep_on_top=True).read(timeout=temps_ms, close=True)
-
-
-def splasher_succes() -> None:
-    gui.Window('Monsieur Tartempion', [[gui.Image(data=succes_base64())]], transparent_color="maroon2",
-               no_titlebar=True, keep_on_top=True).read(timeout=3000, close=True)
-
-
 """def afficher(fenetre: gui.Window, question: tuple) -> None:
     fenetre['QUESTION'].update(question[0])
     reponses = melanger_reponses((question[1], question[2]))
@@ -139,6 +142,7 @@ def effacer_question(fenetre: gui.Window) -> None:
 def afficher(fenetre: gui.Window, question: tuple) -> None:
     fenetre['QUESTION'].update(question[0])
     reponses = melanger_reponses((question[1], question[2]))
+    # reponses = question[1], question[2]
     mettre_a_jour_widgets(fenetre, reponses, False, 'white')
 
 
@@ -156,16 +160,15 @@ def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif
 
 
 def programme_principal() -> None:
+    afficher_images('titre', 2000)
     """Despote suprême de toutes les fonctions."""
     gui.theme('Black')
-
     son_victoire = sa.WaveObject.from_wave_file('522243__dzedenz__result-10.wav')
     son_erreur = sa.WaveObject.from_wave_file('409282__wertstahl__syserr1v1-in_thy_face_short.wav')
     son_fin_partie = sa.WaveObject.from_wave_file('173859__jivatma07__j1game_over_mono.wav')
     musique_questions = sa.WaveObject.from_wave_file('550764__erokia__msfxp9-187_5-synth-loop-bpm-100.wav')
 
-    afficher_images(1500, 2000)
-    # splacher_titre(2000, True)
+
 
     toutes_les_questions = charger_questions("questions.bd")
     questions = choisir_questions(toutes_les_questions, 21)
@@ -194,7 +197,7 @@ def programme_principal() -> None:
                         fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
                     son_fin_partie.play()
                     musique_questions_controles.stop()
-                    splasher_echec(3000)
+                    afficher_images('echec', 3000)
 
                     fenetre['BOUTON-ACTION'].update(disabled=False, visible=True)
                     fenetre['IMAGE-BOUTON-INACTIF'].update(visible=False)
@@ -233,7 +236,7 @@ def programme_principal() -> None:
                         questions[i][1] = Indicateur.VIDE
                     musique_questions_controles.stop()
                     son_victoire.play()
-                    splasher_succes()
+                    afficher_images('succes', 3000)
                     fenetre['BOUTON-ACTION'].update(disabled=False, visible=True)
                     fenetre['IMAGE-BOUTON-INACTIF'].update(visible=False)
                     temps_restant = TEMPS_EPREUVE
