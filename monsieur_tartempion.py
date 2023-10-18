@@ -49,7 +49,6 @@ def afficher_images(temps_ms_equipe: int, temps_ms_titre: int) -> None:
                no_titlebar=True, keep_on_top=True).read(timeout=temps_ms_titre, close=True)
 
 
-
 def afficher_jeu() -> gui.Window:
     title = [gui.Text('Monsieur Tartempion', key='TITLE', font=police_titre)]
 
@@ -75,18 +74,17 @@ def afficher_jeu() -> gui.Window:
                          button_color=(gui.theme_background_color(), gui.theme_background_color()), pad=(0, 10)),
               gui.Image(data=bouton_inactif_base64(), key='IMAGE-BOUTON-INACTIF', visible=False, pad=(0, 10))]
 
-    indicateurs = [
-        *[gui.Image(data=indicateur_vide_base64(), key=f'INDICATEUR-{i}', pad=(4, 10)) for i in range(NB_QUESTIONS)]]
+    indicateurs = \
+        [gui.Image(data=indicateur_vide_base64(), key=f'INDICATEUR-{i}', pad=(4, 10)) for i in range(NB_QUESTIONS)]
 
-    fenetre = gui.Window('Monsieur Tartempion', [temps, boutons_reponse, question, action, indicateurs],
+    fenetre = gui.Window('Monsieur Tartempion', [title, temps, boutons_reponse, question, action, indicateurs],
                          keep_on_top=True, element_padding=(0, 0),
                          element_justification='center', resizable=False, finalize=True)
-
     return fenetre
 
 
 # Élimination erreur
-#Répétition du code
+# Répétition du code
 """
 Exactement le meme code que la méthode effacer_question
 def effacer_question_affichee(fenetre: gui.Window) -> None:
@@ -98,8 +96,6 @@ def effacer_question_affichee(fenetre: gui.Window) -> None:
 
 def charger_questions(fichier_db: str) -> list:
     connexion = squirrel.connect(fichier_db)
-
-
     with connexion:
         resultat_requete = connexion.execute('SELECT question, reponse_exacte, reponse_erronee FROM QUESTIONS')
 
@@ -143,10 +139,13 @@ def effacer_question(fenetre: gui.Window) -> None:
 def afficher(fenetre: gui.Window, question: tuple) -> None:
     fenetre['QUESTION'].update(question[0])
     reponses = melanger_reponses((question[1], question[2]))
-    mettre_a_jour_widgets(fenetre, reponses, False,'white')
+    mettre_a_jour_widgets(fenetre, reponses, False, 'white')
+
 
 def effacer_question(fenetre: gui.Window) -> None:
+    fenetre['QUESTION'].update('')
     mettre_a_jour_widgets(fenetre, ('', '', ''), True, gui.theme_background_color())
+
 
 # Correction erreur 6
 # Duplication élliminée
@@ -158,7 +157,6 @@ def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif
 
 def programme_principal() -> None:
     """Despote suprême de toutes les fonctions."""
-
     gui.theme('Black')
 
     son_victoire = sa.WaveObject.from_wave_file('522243__dzedenz__result-10.wav')
@@ -176,6 +174,8 @@ def programme_principal() -> None:
     temps_restant = 60
     prochaine_question = 0
     decompte_actif = False
+    temps_actuel = round(time.time())
+    musique_questions_controles = musique_questions
 
     quitter = False
     while not quitter:
@@ -203,6 +203,7 @@ def programme_principal() -> None:
                     fenetre.un_hide()
                     questions = choisir_questions(toutes_les_questions, NB_QUESTIONS)
                     prochaine_question = 0
+
                     continue
 
         if event == 'BOUTON-ACTION':
@@ -262,6 +263,21 @@ def programme_principal() -> None:
     fenetre.close()
     del fenetre
 
-if __name__ == '__main__':
 
+# def reinitialiser_jeu() -> tuple[list, int]:
+#
+#     fenetre = afficher_jeu()
+#     toutes_les_questions = charger_questions("questions.bd")
+#     fenetre['BOUTON-ACTION'].update(disabled=False, visible=True)
+#     fenetre['IMAGE-BOUTON-INACTIF'].update(visible=False)
+#     temps_restant = TEMPS_EPREUVE
+#     fenetre['TEMPS'].update(str(temps_restant))
+#     fenetre.un_hide()
+#     questions = choisir_questions(toutes_les_questions, NB_QUESTIONS)
+#     prochaine_question = 0
+#
+#     return questions, prochaine_question
+
+
+if __name__ == '__main__':
     programme_principal()
