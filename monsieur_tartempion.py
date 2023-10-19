@@ -32,6 +32,7 @@ from indicateurs import Indicateur
 
 NB_QUESTIONS = 21
 TEMPS_EPREUVE = 60
+TITRE = 'Monsieur Tartempion'
 type_font = gui.DEFAULT_FONT
 police_titre = (type_font, 40, 'italic')
 police_etiquettes = (type_font, 20, 'normal')
@@ -49,22 +50,23 @@ def afficher_images(objet: str, temps: int) -> None:
     """
     match objet:
         case 'equipe':
-             gui.Window('Monsieur Tartempion', [[gui.Image(data=equipe_base64())]],
-                              no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
+            gui.Window(TITRE, [[gui.Image(data=equipe_base64())]],
+                       no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
         case 'titre':
-             gui.Window('Monsieur Tartempion', [[gui.Image(data=titre_base64())]],
-                              no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
+            gui.Window(TITRE, [[gui.Image(data=titre_base64())]],
+                       no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
         case 'echec':
-             gui.Window('Monsieur Tartempion', [[gui.Image(data=echec_base64())]],
-                              transparent_color=gui.theme_background_color(),
-                              no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
+            gui.Window(TITRE, [[gui.Image(data=echec_base64())]],
+                       transparent_color=gui.theme_background_color(),
+                       no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
         case 'succes':
-             gui.Window('Monsieur Tartempion', [[gui.Image(data=succes_base64())]],
-                              transparent_color="maroon2", no_titlebar=True,
-                              keep_on_top=True).read(timeout=temps, close=True)
+            gui.Window(TITRE, [[gui.Image(data=succes_base64())]],
+                       transparent_color="maroon2", no_titlebar=True,
+                       keep_on_top=True).read(timeout=temps, close=True)
+
 
 def afficher_jeu() -> gui.Window:
-    title = [gui.Text('Monsieur Tartempion', key='TITLE', font=police_titre)]
+    titre = [gui.Text(TITRE, key='TITLE', font=police_titre)]
 
     temps = [[gui.Text('Temps restant', font=police_etiquettes, size=70, justification='center')],
              [gui.Text(str(60), key='TEMPS', font=police_temps)]]
@@ -91,21 +93,10 @@ def afficher_jeu() -> gui.Window:
     indicateurs = \
         [gui.Image(data=indicateur_vide_base64(), key=f'INDICATEUR-{i}', pad=(4, 10)) for i in range(NB_QUESTIONS)]
 
-    fenetre = gui.Window('Monsieur Tartempion', [title, temps, boutons_reponse,
-                                                 question, action, indicateurs], keep_on_top=True,
+    fenetre = gui.Window(TITRE, [titre, temps, boutons_reponse,
+                                 question, action, indicateurs], keep_on_top=True,
                          element_padding=(0, 0), element_justification='center', resizable=False, finalize=True)
     return fenetre
-
-
-# Élimination erreur
-# Répétition du code
-"""
-Exactement le meme code que la méthode effacer_question
-def effacer_question_affichee(fenetre: gui.Window) -> None:
-    fenetre['BOUTON-GAUCHE'].update('', disabled=True, visible=True)
-    fenetre['QUESTION'].update("")
-    fenetre['OU'].update(text_color=gui.theme_background_color())
-    fenetre['BOUTON-DROIT'].update('', disabled=True, visible=True)"""
 
 
 def charger_questions(fichier_db: str) -> list:
@@ -124,19 +115,11 @@ def melanger_reponses(reponses: tuple) -> tuple:
     return (reponses[0], reponses[1]) if bool(random.getrandbits(1)) else (reponses[1], reponses[0])
 
 
-"""def afficher(fenetre: gui.Window, question: tuple) -> None:
-    fenetre['QUESTION'].update(question[0])
-    reponses = melanger_reponses((question[1], question[2]))
-    fenetre['BOUTON-GAUCHE'].update(reponses[0], disabled=False, visible=True)
-    fenetre['OU'].update(text_color='white')
-    fenetre['BOUTON-DROIT'].update(reponses[1], disabled=False, visible=True)
-
-
-def effacer_question(fenetre: gui.Window) -> None:
-    fenetre['QUESTION'].update('')
-    fenetre['BOUTON-GAUCHE'].update('', disabled=True, visible=True)
-    fenetre['OU'].update(text_color=gui.theme_background_color())
-    fenetre['BOUTON-DROIT'].update('', disabled=True, visible=True)"""
+# Duplication élliminée
+def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif: bool, couleur_text: str) -> None:
+    fenetre['BOUTON-GAUCHE'].update(reponses[0], disabled=bouton_est_actif, visible=True)
+    fenetre['OU'].update(text_color=couleur_text)
+    fenetre['BOUTON-DROIT'].update(reponses[1], disabled=bouton_est_actif, visible=True)
 
 
 def afficher(fenetre: gui.Window, question: tuple) -> None:
@@ -151,25 +134,17 @@ def effacer_question(fenetre: gui.Window) -> None:
     mettre_a_jour_widgets(fenetre, ('', '', ''), True, gui.theme_background_color())
 
 
-# Correction erreur 6
-# Duplication élliminée
-def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif: bool, couleur_text: str) -> None:
-    fenetre['BOUTON-GAUCHE'].update(reponses[0], disabled=bouton_est_actif, visible=True)
-    fenetre['OU'].update(text_color=couleur_text)
-    fenetre['BOUTON-DROIT'].update(reponses[1], disabled=bouton_est_actif, visible=True)
-
-
 def programme_principal() -> None:
     afficher_images('equipe', 1500)
     afficher_images('titre', 2000)
     """Despote suprême de toutes les fonctions."""
+
     gui.theme('Black')
+
     son_victoire = sa.WaveObject.from_wave_file('522243__dzedenz__result-10.wav')
     son_erreur = sa.WaveObject.from_wave_file('409282__wertstahl__syserr1v1-in_thy_face_short.wav')
     son_fin_partie = sa.WaveObject.from_wave_file('173859__jivatma07__j1game_over_mono.wav')
     musique_questions = sa.WaveObject.from_wave_file('550764__erokia__msfxp9-187_5-synth-loop-bpm-100.wav')
-
-
 
     toutes_les_questions = charger_questions("questions.bd")
     questions = choisir_questions(toutes_les_questions, 21)
