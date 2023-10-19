@@ -29,6 +29,7 @@ import PySimpleGUI as gui
 
 from images import *
 from indicateurs import Indicateur
+from sons import Son
 
 NB_QUESTIONS = 21
 TEMPS_EPREUVE = 60
@@ -41,11 +42,12 @@ police_question = (type_font, 30, 'normal')
 police_reponses = (type_font, 20, 'normal')
 police_choix = (type_font, 20, 'italic')
 
+
 # Les sons du jeu
-son_victoire = sa.WaveObject.from_wave_file('522243__dzedenz__result-10.wav')
-son_erreur = sa.WaveObject.from_wave_file('409282__wertstahl__syserr1v1-in_thy_face_short.wav')
-son_fin_partie = sa.WaveObject.from_wave_file('173859__jivatma07__j1game_over_mono.wav')
-musique_questions = sa.WaveObject.from_wave_file('550764__erokia__msfxp9-187_5-synth-loop-bpm-100.wav')
+# son_victoire = sa.WaveObject.from_wave_file('522243__dzedenz__result-10.wav')
+# son_erreur = sa.WaveObject.from_wave_file('409282__wertstahl__syserr1v1-in_thy_face_short.wav')
+# son_fin_partie = sa.WaveObject.from_wave_file('173859__jivatma07__j1game_over_mono.wav')
+# musique_questions = sa.WaveObject.from_wave_file('550764__erokia__msfxp9-187_5-synth-loop-bpm-100.wav')
 
 
 def afficher_images(objet: str, temps: int) -> None:
@@ -148,7 +150,6 @@ def programme_principal() -> None:
     prochaine_question = 0
     decompte_actif = False
     temps_actuel = round(time.time())
-    #musique_questions_controles = musique_questions
 
     # Appel des fonctions
     afficher_images('equipe', 1500)
@@ -171,27 +172,20 @@ def programme_principal() -> None:
                     effacer_question(fenetre)
                     for i in range(NB_QUESTIONS):
                         fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
-                    son_fin_partie.play()
-                    musique_questions_controles.stop()
+                    Son.FIN_PARTIE.play()
+                    Son.QUESTION.stop()
                     afficher_images('echec', 3000)
-
-                    fenetre['BOUTON-ACTION'].update(disabled=False, visible=True)
-                    fenetre['IMAGE-BOUTON-INACTIF'].update(visible=False)
-                    temps_restant = 60
-                    fenetre['TEMPS'].update(str(temps_restant))
-                    fenetre.un_hide()
-                    questions = choisir_questions(NB_QUESTIONS)
-                    prochaine_question = 0
+                    questions, prochaine_question = reinitialiser_jeu(fenetre)
 
                     continue
 
         if event == 'BOUTON-ACTION':
-            fenetre['BOUTON-ACTION'].update(disabled=True, visible=False)
-            fenetre['IMAGE-BOUTON-INACTIF'].update(visible=True)
+            reinitialiser_bouton(fenetre, True)
+
             temps_actuel = round(time.time())
             decompte_actif = True
             afficher(fenetre, questions[prochaine_question][0])
-            musique_questions_controles = musique_questions.play()
+            Son.QUESTION.play()
         elif event == 'BOUTON-GAUCHE' or event == 'BOUTON-DROIT':
             if (event == 'BOUTON-GAUCHE' and fenetre['BOUTON-GAUCHE'].get_text() != questions[prochaine_question][0][
                 1]) or \
@@ -211,16 +205,10 @@ def programme_principal() -> None:
                     for i in range(NB_QUESTIONS):
                         fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
                         questions[i][1] = Indicateur.VIDE
-                    musique_questions_controles.stop()
-                    son_victoire.play()
+                    Son.QUESTION.stop()
+                    Son.VICTOIRE.play()
                     afficher_images('succes', 3000)
-                    fenetre['BOUTON-ACTION'].update(disabled=False, visible=True)
-                    fenetre['IMAGE-BOUTON-INACTIF'].update(visible=False)
-                    temps_restant = TEMPS_EPREUVE
-                    fenetre['TEMPS'].update(str(temps_restant))
-                    fenetre.un_hide()
-                    questions = choisir_questions(NB_QUESTIONS)
-                    prochaine_question = 0
+                    questions, prochaine_question = reinitialiser_jeu(fenetre)
                     continue
 
 
@@ -234,32 +222,31 @@ def programme_principal() -> None:
                 fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_rouge_base64())
                 questions[prochaine_question][1] = Indicateur.ROUGE
                 prochaine_question = 0
-                fenetre['BOUTON-ACTION'].update(disabled=False, visible=True)
-                fenetre['IMAGE-BOUTON-INACTIF'].update(visible=False)
-                son_erreur.play()
-                musique_questions_controles.stop()
+                reinitialiser_bouton(fenetre, False)
+
+                Son.ERREUR.play()
+                Son.QUESTION.stop()
         elif event == gui.WIN_CLOSED:
             decompte_actif = False
             quitter = True
 
     fenetre.close()
-    # toutes_les_questions.close()
     del fenetre
 
 
-# def reinitialiser_jeu() -> tuple[list, int]:
-#
-#     fenetre = afficher_jeu()
-#     toutes_les_questions = charger_questions("questions.bd")
-#     fenetre['BOUTON-ACTION'].update(disabled=False, visible=True)
-#     fenetre['IMAGE-BOUTON-INACTIF'].update(visible=False)
-#     temps_restant = TEMPS_EPREUVE
-#     fenetre['TEMPS'].update(str(temps_restant))
-#     fenetre.un_hide()
-#     questions = choisir_questions(toutes_les_questions, NB_QUESTIONS)
-#     prochaine_question = 0
-#
-#     return questions, prochaine_question
+def reinitialiser_jeu(fenetre) -> tuple[list, int]:
+    reinitialiser_bouton(fenetre, False)
+    temps_restant = TEMPS_EPREUVE
+    fenetre['TEMPS'].update(str(temps_restant))
+    fenetre.un_hide()
+    questions = choisir_questions(NB_QUESTIONS)
+    prochaine_question = 0
+    return questions, prochaine_question
+
+
+def reinitialiser_bouton(fenetre, bouton_disabled: bool) -> None:
+    fenetre['BOUTON-ACTION'].update(disabled=bouton_disabled, visible=not bouton_disabled)
+    fenetre['IMAGE-BOUTON-INACTIF'].update(visible=bouton_disabled)
 
 
 if __name__ == '__main__':
