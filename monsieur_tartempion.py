@@ -41,6 +41,12 @@ police_question = (type_font, 30, 'normal')
 police_reponses = (type_font, 20, 'normal')
 police_choix = (type_font, 20, 'italic')
 
+# Les sons du jeu
+son_victoire = sa.WaveObject.from_wave_file('522243__dzedenz__result-10.wav')
+son_erreur = sa.WaveObject.from_wave_file('409282__wertstahl__syserr1v1-in_thy_face_short.wav')
+son_fin_partie = sa.WaveObject.from_wave_file('173859__jivatma07__j1game_over_mono.wav')
+musique_questions = sa.WaveObject.from_wave_file('550764__erokia__msfxp9-187_5-synth-loop-bpm-100.wav')
+
 
 def afficher_images(objet: str, temps: int) -> None:
     """Affiche une fenêtre avec une image en fonction de l'objet donné.
@@ -66,6 +72,7 @@ def afficher_images(objet: str, temps: int) -> None:
 
 
 def afficher_jeu() -> gui.Window:
+    gui.theme('Black')
     titre = [gui.Text(TITRE, key='TITLE', font=police_titre)]
 
     temps = [[gui.Text('Temps restant', font=police_etiquettes, size=70, justification='center')],
@@ -107,8 +114,10 @@ def charger_questions(fichier_db: str) -> list:
     return [(enregistrement[0], enregistrement[1], enregistrement[2]) for enregistrement in resultat_requete]
 
 
-def choisir_questions(liste_de_questions: list, nombre_de_questions: int) -> list:
-    return [[question, Indicateur.VIDE] for question in random.choices(liste_de_questions, k=nombre_de_questions)]
+def choisir_questions(nombre_de_questions: int) -> list:
+    toutes_les_questions = charger_questions("questions.bd")
+
+    return [[question, Indicateur.VIDE] for question in random.choices(toutes_les_questions, k=nombre_de_questions)]
 
 
 def melanger_reponses(reponses: tuple) -> tuple:
@@ -124,8 +133,8 @@ def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif
 
 def afficher(fenetre: gui.Window, question: tuple) -> None:
     fenetre['QUESTION'].update(question[0])
-    reponses = melanger_reponses((question[1], question[2]))
-    # reponses = question[1], question[2]
+    # reponses = melanger_reponses((question[1], question[2]))
+    reponses = question[1], question[2]
     mettre_a_jour_widgets(fenetre, reponses, False, 'white')
 
 
@@ -135,26 +144,17 @@ def effacer_question(fenetre: gui.Window) -> None:
 
 
 def programme_principal() -> None:
-    afficher_images('equipe', 1500)
-    afficher_images('titre', 2000)
-    """Despote suprême de toutes les fonctions."""
-
-    gui.theme('Black')
-
-    son_victoire = sa.WaveObject.from_wave_file('522243__dzedenz__result-10.wav')
-    son_erreur = sa.WaveObject.from_wave_file('409282__wertstahl__syserr1v1-in_thy_face_short.wav')
-    son_fin_partie = sa.WaveObject.from_wave_file('173859__jivatma07__j1game_over_mono.wav')
-    musique_questions = sa.WaveObject.from_wave_file('550764__erokia__msfxp9-187_5-synth-loop-bpm-100.wav')
-
-    toutes_les_questions = charger_questions("questions.bd")
-    questions = choisir_questions(toutes_les_questions, 21)
-
-    fenetre = afficher_jeu()
     temps_restant = 60
     prochaine_question = 0
     decompte_actif = False
     temps_actuel = round(time.time())
-    musique_questions_controles = musique_questions
+    #musique_questions_controles = musique_questions
+
+    # Appel des fonctions
+    afficher_images('equipe', 1500)
+    afficher_images('titre', 2000)
+    questions = choisir_questions(21)
+    fenetre = afficher_jeu()
 
     quitter = False
     while not quitter:
@@ -180,7 +180,7 @@ def programme_principal() -> None:
                     temps_restant = 60
                     fenetre['TEMPS'].update(str(temps_restant))
                     fenetre.un_hide()
-                    questions = choisir_questions(toutes_les_questions, NB_QUESTIONS)
+                    questions = choisir_questions(NB_QUESTIONS)
                     prochaine_question = 0
 
                     continue
@@ -197,6 +197,7 @@ def programme_principal() -> None:
                 1]) or \
                     (event == 'BOUTON-DROIT' and fenetre['BOUTON-DROIT'].get_text() != questions[prochaine_question][0][
                         1]):
+
                 # le joueur a choisi la mauvaise réponse
                 fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vert_base64())
                 questions[prochaine_question][1] = Indicateur.VERT
@@ -218,9 +219,11 @@ def programme_principal() -> None:
                     temps_restant = TEMPS_EPREUVE
                     fenetre['TEMPS'].update(str(temps_restant))
                     fenetre.un_hide()
-                    questions = choisir_questions(toutes_les_questions, NB_QUESTIONS)
+                    questions = choisir_questions(NB_QUESTIONS)
                     prochaine_question = 0
                     continue
+
+
             else:
                 # le joueur a choisi la bonne réponse
                 decompte_actif = False
@@ -240,6 +243,7 @@ def programme_principal() -> None:
             quitter = True
 
     fenetre.close()
+    # toutes_les_questions.close()
     del fenetre
 
 
