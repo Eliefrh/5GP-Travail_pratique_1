@@ -113,18 +113,26 @@ def charger_questions(fichier_db: str) -> list:
     with connexion:
         resultat_requete = connexion.execute('SELECT question, reponse_exacte, reponse_erronee FROM QUESTIONS')
 
-    return [(enregistrement[0], enregistrement[1], enregistrement[2]) for enregistrement in resultat_requete]
+    toutes_questions = [(enregistrement[0], enregistrement[1], enregistrement[2])\
+                        for enregistrement in resultat_requete]
+
+    return toutes_questions
 
 
 def choisir_questions(nombre_de_questions: int) -> list:
     toutes_les_questions = charger_questions("questions.bd")
 
-    return [[question, Indicateur.VIDE] for question in random.choices(toutes_les_questions, k=nombre_de_questions)]
+    questions_selectionnees = [[question, Indicateur.VIDE]\
+                               for question in random.choices(toutes_les_questions, k=nombre_de_questions)]
+
+    return questions_selectionnees
 
 
-def melanger_reponses(reponses: tuple) -> tuple:
-    return (reponses[0], reponses[1]) if bool(random.getrandbits(1)) else (reponses[1], reponses[0])
-
+def melanger_reponses(reponses: tuple, decompte_actif : bool) -> tuple:
+    if decompte_actif:
+        return (reponses[0], reponses[1]) if bool(random.getrandbits(1)) else (reponses[1], reponses[0])
+    else :
+        return reponses
 
 # Duplication élliminée
 def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif: bool, couleur_text: str) -> None:
@@ -133,10 +141,12 @@ def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif
     fenetre['BOUTON-DROIT'].update(reponses[1], disabled=bouton_est_actif, visible=True)
 
 
-def afficher(fenetre: gui.Window, question: tuple) -> None:
+def afficher(fenetre: gui.Window, question: tuple, decompte_actif : bool) -> None:
     fenetre['QUESTION'].update(question[0])
-    # reponses = melanger_reponses((question[1], question[2]))
-    reponses = question[1], question[2]
+
+    reponses = melanger_reponses((question[1], question[2]), decompte_actif)
+
+     # reponses = question[1], question[2]
     mettre_a_jour_widgets(fenetre, reponses, False, 'white')
 
 
@@ -184,7 +194,7 @@ def programme_principal() -> None:
 
             temps_actuel = round(time.time())
             decompte_actif = True
-            afficher(fenetre, questions[prochaine_question][0])
+            afficher(fenetre, questions[prochaine_question][0], decompte_actif)
             Son.QUESTION.play()
         elif event == 'BOUTON-GAUCHE' or event == 'BOUTON-DROIT':
             if (event == 'BOUTON-GAUCHE' and fenetre['BOUTON-GAUCHE'].get_text() != questions[prochaine_question][0][
@@ -192,12 +202,12 @@ def programme_principal() -> None:
                     (event == 'BOUTON-DROIT' and fenetre['BOUTON-DROIT'].get_text() != questions[prochaine_question][0][
                         1]):
 
-                # le joueur a choisi la mauvaise réponse
+                # le joueur a choisi la bonne réponse
                 fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vert_base64())
                 questions[prochaine_question][1] = Indicateur.VERT
                 prochaine_question += 1
                 if prochaine_question < NB_QUESTIONS:
-                    afficher(fenetre, questions[prochaine_question][0])
+                    afficher(fenetre, questions[prochaine_question][0],decompte_actif)
                 elif 21 <= prochaine_question:
                     decompte_actif = False
                     fenetre.hide()
@@ -207,13 +217,14 @@ def programme_principal() -> None:
                         questions[i][1] = Indicateur.VIDE
                     Son.QUESTION.stop()
                     Son.VICTOIRE.play()
+                    temps_restant = 60
                     afficher_images('succes', 3000)
                     questions, prochaine_question = reinitialiser_jeu(fenetre)
                     continue
 
 
             else:
-                # le joueur a choisi la bonne réponse
+                # le joueur a choisi la mauvais réponse
                 decompte_actif = False
                 effacer_question(fenetre)
                 for i in range(prochaine_question):
