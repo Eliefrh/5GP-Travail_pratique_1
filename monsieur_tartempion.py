@@ -190,7 +190,7 @@ def programme_principal() -> None:
                     continue
 
         if event == 'BOUTON-ACTION':
-            reinitialiser_bouton(fenetre, True)
+            reinitialiser_bouton_action(fenetre, True)
 
             temps_actuel = round(time.time())
             decompte_actif = True
@@ -233,7 +233,7 @@ def programme_principal() -> None:
                 fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_rouge_base64())
                 questions[prochaine_question][1] = Indicateur.ROUGE
                 prochaine_question = 0
-                reinitialiser_bouton(fenetre, False)
+                reinitialiser_bouton_action(fenetre, False)
 
                 Son.ERREUR.play()
                 Son.QUESTION.stop()
@@ -246,7 +246,7 @@ def programme_principal() -> None:
 
 
 def reinitialiser_jeu(fenetre) -> tuple[list, int]:
-    reinitialiser_bouton(fenetre, False)
+    reinitialiser_bouton_action(fenetre, False)
     temps_restant = TEMPS_EPREUVE
     fenetre['TEMPS'].update(str(temps_restant))
     fenetre.un_hide()
@@ -255,9 +255,9 @@ def reinitialiser_jeu(fenetre) -> tuple[list, int]:
     return questions, prochaine_question
 
 
-def reinitialiser_bouton(fenetre, bouton_disabled: bool) -> None:
-    fenetre['BOUTON-ACTION'].update(disabled=bouton_disabled, visible=not bouton_disabled)
-    fenetre['IMAGE-BOUTON-INACTIF'].update(visible=bouton_disabled)
+def reinitialiser_bouton_action(fenetre, activation_bouton: bool) -> None:
+    fenetre['BOUTON-ACTION'].update(disabled=activation_bouton, visible=not activation_bouton)
+    fenetre['IMAGE-BOUTON-INACTIF'].update(visible=activation_bouton)
 
 
 if __name__ == '__main__':
