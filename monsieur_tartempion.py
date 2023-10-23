@@ -128,11 +128,8 @@ def choisir_questions(nombre_de_questions: int) -> list:
     return questions_selectionnees
 
 
-def melanger_reponses(reponses: tuple, decompte_actif : bool) -> tuple:
-    if decompte_actif:
-        return (reponses[0], reponses[1]) if bool(random.getrandbits(1)) else (reponses[1], reponses[0])
-    else :
-        return reponses
+def melanger_reponses(reponses: tuple) -> tuple:
+    return (reponses[0], reponses[1]) if bool(random.getrandbits(1)) else (reponses[1], reponses[0])
 
 # Duplication élliminée
 def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif: bool, couleur_text: str) -> None:
@@ -141,12 +138,12 @@ def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif
     fenetre['BOUTON-DROIT'].update(reponses[1], disabled=bouton_est_actif, visible=True)
 
 
-def afficher(fenetre: gui.Window, question: tuple, decompte_actif : bool) -> None:
+def afficher(fenetre: gui.Window, question: tuple) -> None:
     fenetre['QUESTION'].update(question[0])
 
-    reponses = melanger_reponses((question[1], question[2]), decompte_actif)
+    # reponses = melanger_reponses((question[1], question[2]))
 
-     # reponses = question[1], question[2]
+    reponses = question[1], question[2]
     mettre_a_jour_widgets(fenetre, reponses, False, 'white')
 
 
@@ -194,7 +191,7 @@ def programme_principal() -> None:
 
             temps_actuel = round(time.time())
             decompte_actif = True
-            afficher(fenetre, questions[prochaine_question][0], decompte_actif)
+            afficher(fenetre, questions[prochaine_question][0])
             Son.QUESTION.play()
         elif event == 'BOUTON-GAUCHE' or event == 'BOUTON-DROIT':
             if (event == 'BOUTON-GAUCHE' and fenetre['BOUTON-GAUCHE'].get_text() != questions[prochaine_question][0][
@@ -207,7 +204,7 @@ def programme_principal() -> None:
                 questions[prochaine_question][1] = Indicateur.VERT
                 prochaine_question += 1
                 if prochaine_question < NB_QUESTIONS:
-                    afficher(fenetre, questions[prochaine_question][0],decompte_actif)
+                    afficher(fenetre, questions[prochaine_question][0])
                 elif 21 <= prochaine_question:
                     decompte_actif = False
                     fenetre.hide()
