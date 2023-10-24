@@ -20,7 +20,7 @@ Ressources sous licences:
   par Erokia, 2020-12-26
   Licence: https://creativecommons.org/licenses/by-nc/4.0/
 """
-
+import pickle
 import random
 import simpleaudio as sa
 import time
@@ -42,12 +42,30 @@ police_question = (type_font, 30, 'normal')
 police_reponses = (type_font, 20, 'normal')
 police_choix = (type_font, 20, 'italic')
 
-
 # Les sons du jeu
 # son_victoire = sa.WaveObject.from_wave_file('522243__dzedenz__result-10.wav')
 # son_erreur = sa.WaveObject.from_wave_file('409282__wertstahl__syserr1v1-in_thy_face_short.wav')
 # son_fin_partie = sa.WaveObject.from_wave_file('173859__jivatma07__j1game_over_mono.wav')
 # musique_questions = sa.WaveObject.from_wave_file('550764__erokia__msfxp9-187_5-synth-loop-bpm-100.wav')
+
+
+"""Crée un fichier pickle contenant les images encodées en base64."""
+images_base64 = {
+    "equipe": equipe_base64(),
+    "echec": echec_base64(),
+    "succes": succes_base64(),
+    "titre": titre_base64()
+}
+
+with open('images.pickle', 'wb') as fichier_pickle:
+    pickle.dump(images_base64, fichier_pickle)
+
+
+def charger_images_de_pickle():
+    """Charge les images depuis le fichier pickle."""
+    with open('images.pickle', 'rb') as fichier_pickle:
+        images_base64 = pickle.load(fichier_pickle)
+    return images_base64
 
 
 def afficher_images(objet: str, temps: int) -> None:
@@ -56,19 +74,21 @@ def afficher_images(objet: str, temps: int) -> None:
     param objet: Une chaîne de caractères représentant l'objet.
     param temps: Le temps d'affichage de la fenêtre en millisecondes.
     """
+    images_base64 = charger_images_de_pickle()
+
     match objet:
         case 'equipe':
-            gui.Window(TITRE, [[gui.Image(data=equipe_base64())]],
+            gui.Window("Titre", [[gui.Image(data=images_base64["equipe"])]],
                        no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
         case 'titre':
-            gui.Window(TITRE, [[gui.Image(data=titre_base64())]],
+            gui.Window("Titre", [[gui.Image(data=images_base64["titre"])]],
                        no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
         case 'echec':
-            gui.Window(TITRE, [[gui.Image(data=echec_base64())]],
+            gui.Window("Titre", [[gui.Image(data=images_base64["echec"])]],
                        transparent_color=gui.theme_background_color(),
                        no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
         case 'succes':
-            gui.Window(TITRE, [[gui.Image(data=succes_base64())]],
+            gui.Window("Titre", [[gui.Image(data=images_base64["succes"])]],
                        transparent_color="maroon2", no_titlebar=True,
                        keep_on_top=True).read(timeout=temps, close=True)
 
