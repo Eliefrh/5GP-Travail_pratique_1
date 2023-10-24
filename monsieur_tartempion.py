@@ -42,12 +42,8 @@ police_question = (type_font, 30, 'normal')
 police_reponses = (type_font, 20, 'normal')
 police_choix = (type_font, 20, 'italic')
 
-# Les sons du jeu
-# son_victoire = sa.WaveObject.from_wave_file('522243__dzedenz__result-10.wav')
-# son_erreur = sa.WaveObject.from_wave_file('409282__wertstahl__syserr1v1-in_thy_face_short.wav')
-# son_fin_partie = sa.WaveObject.from_wave_file('173859__jivatma07__j1game_over_mono.wav')
-# musique_questions = sa.WaveObject.from_wave_file('550764__erokia__msfxp9-187_5-synth-loop-bpm-100.wav')
-
+ordre_affichage: bool = []
+premiere_fois = True
 
 """Crée un fichier pickle contenant les images encodées en base64."""
 images_base64 = {
@@ -133,7 +129,7 @@ def charger_questions(fichier_db: str) -> list:
     with connexion:
         resultat_requete = connexion.execute('SELECT question, reponse_exacte, reponse_erronee FROM QUESTIONS')
 
-    toutes_questions = [(enregistrement[0], enregistrement[1], enregistrement[2])\
+    toutes_questions = [(enregistrement[0], enregistrement[1], enregistrement[2]) \
                         for enregistrement in resultat_requete]
 
     return toutes_questions
@@ -142,14 +138,33 @@ def charger_questions(fichier_db: str) -> list:
 def choisir_questions(nombre_de_questions: int) -> list:
     toutes_les_questions = charger_questions("questions.bd")
 
-    questions_selectionnees = [[question, Indicateur.VIDE]\
+    questions_selectionnees = [[question, Indicateur.VIDE] \
                                for question in random.choices(toutes_les_questions, k=nombre_de_questions)]
 
     return questions_selectionnees
 
 
-def melanger_reponses(reponses: tuple) -> tuple:
-    return (reponses[0], reponses[1]) if bool(random.getrandbits(1)) else (reponses[1], reponses[0])
+def melanger_reponses(reponses: tuple, premiere_fois: bool, numero_question: int) -> tuple:
+    """On fait une verification si la question est posée pour la premiere fois
+     - on verifie cela par la boolean premiere fois et le numero de la question
+     - on stock l'ordre des reponses a partir de leur boolean dans une liste
+     - on revient chercher la position dans la liste si ce nest pas la premiere fois pour cette question"""
+    print(len(ordre_affichage))
+    if (numero_question + 1 > len(ordre_affichage)):
+        premiere_fois = True
+    if (premiere_fois):
+        ordre = bool(random.getrandbits(1))
+
+        ordre_affichage.append(ordre)
+        return (reponses[0], reponses[1]) if ordre else (reponses[1], reponses[0])
+    else:
+        if (ordre_affichage[numero_question] == True):
+            print(ordre_affichage[numero_question])
+            return (reponses[0], reponses[1])
+        else:
+            print(ordre_affichage[numero_question])
+            return (reponses[1], reponses[0])
+
 
 # Duplication élliminée
 def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif: bool, couleur_text: str) -> None:
@@ -158,12 +173,10 @@ def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif
     fenetre['BOUTON-DROIT'].update(reponses[1], disabled=bouton_est_actif, visible=True)
 
 
-def afficher(fenetre: gui.Window, question: tuple) -> None:
+def afficher(fenetre: gui.Window, question: tuple, premiere_fois: bool, numero_questoin: int) -> None:
     fenetre['QUESTION'].update(question[0])
-
-    # reponses = melanger_reponses((question[1], question[2]))
-
-    reponses = question[1], question[2]
+    reponses = melanger_reponses((question[1], question[2]), premiere_fois, numero_questoin)
+    # reponses = question[1], question[2]
     mettre_a_jour_widgets(fenetre, reponses, False, 'white')
 
 
@@ -183,7 +196,7 @@ def programme_principal() -> None:
     afficher_images('titre', 2000)
     questions = choisir_questions(21)
     fenetre = afficher_jeu()
-
+    premiere_fois = True
     quitter = False
     while not quitter:
         event, valeurs = fenetre.read(timeout=10)
@@ -201,17 +214,21 @@ def programme_principal() -> None:
                         fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
                     Son.FIN_PARTIE.play()
                     Son.QUESTION.stop()
+                    temps_restant = 60
                     afficher_images('echec', 3000)
                     questions, prochaine_question = reinitialiser_jeu(fenetre)
 
                     continue
 
         if event == 'BOUTON-ACTION':
+            if (temps_restant != 60):
+                premiere_fois = False
             reinitialiser_bouton_action(fenetre, True)
 
             temps_actuel = round(time.time())
             decompte_actif = True
-            afficher(fenetre, questions[prochaine_question][0])
+
+            afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
             Son.QUESTION.play()
         elif event == 'BOUTON-GAUCHE' or event == 'BOUTON-DROIT':
             if (event == 'BOUTON-GAUCHE' and fenetre['BOUTON-GAUCHE'].get_text() != questions[prochaine_question][0][
@@ -223,8 +240,9 @@ def programme_principal() -> None:
                 fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vert_base64())
                 questions[prochaine_question][1] = Indicateur.VERT
                 prochaine_question += 1
+
                 if prochaine_question < NB_QUESTIONS:
-                    afficher(fenetre, questions[prochaine_question][0])
+                    afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
                 elif 21 <= prochaine_question:
                     decompte_actif = False
                     fenetre.hide()
