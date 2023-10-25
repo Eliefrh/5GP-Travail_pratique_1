@@ -22,8 +22,6 @@ Ressources sous licences:
 """
 import pickle
 import random
-from tkinter import messagebox
-
 import simpleaudio as sa
 import time
 import sqlite3 as squirrel
@@ -101,7 +99,7 @@ def afficher_jeu():
                                          button_color=('white', 'blue'),
                                          border_width=0, disabled=True, visible=True)
 
-    espace_droit = gui.Column([[gui.Text('', size=(125, 1)) \
+    espace_droit = gui.Column([[gui.Text('', key='', size=(125, 1)) \
                                    , bouton_changer_question]], element_justification='center')
 
     titre = [gui.Text(TITRE, key='TITLE', font=police_titre)]
@@ -212,6 +210,27 @@ def effacer_question(fenetre: gui.Window) -> None:
     mettre_a_jour_widgets(fenetre, ('', '', ''), True, gui.theme_background_color())
 
 
+def changer_question(compteur: int, prochaine_question: int, questions: tuple
+                     , question_changee: tuple, fenetre: gui.Window, question_changee_succes : bool) -> bool:
+    if (compteur== prochaine_question):
+        list_nouvelle_questoin = questions
+        list_nouvelle_questoin.pop(prochaine_question)
+
+        questions = (list_nouvelle_questoin)
+        questions.append(question_changee)
+
+        afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
+
+        fenetre['CHANGER_QUESTION'].update(disabled=True)
+        fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vide_base64())
+        question_changee_succes = True
+        return question_changee_succes
+        # print(len(questions))
+
+    else:
+        fenetre['MESSAGE'].update("Vous avez déjà réussi cette question!")
+        return question_changee_succes
+
 def programme_principal() -> None:
     temps_restant = 60
     prochaine_question = 0
@@ -257,31 +276,12 @@ def programme_principal() -> None:
                     continue
 
         if event == 'CHANGER_QUESTION':
-            if (compteur == prochaine_question):
-                # print('ca march')
-                list_nouvelle_questoin = questions
-                # print(list_nouvelle_questoin)
-                list_nouvelle_questoin.pop(prochaine_question)
-                # print("------------")
-                # print(list_nouvelle_questoin)
-                questions = (list_nouvelle_questoin)
-                questions.append(question_changee)
-                # print("------------")
-                # print(len(questions))
-                afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
-                # print(questions)
-                fenetre['CHANGER_QUESTION'].update(disabled=True)
-                fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vide_base64())
-                question_changee_succes = True
-
-                # print(len(questions))
-
-            else:
-                fenetre['MESSAGE'].update("Vosu avez deja reussi cette question! ")
+            question_changee_succes = changer_question(compteur, prochaine_question,\
+                                                       questions, question_changee, fenetre, question_changee_succes)
 
 
 
-        elif event == 'BOUTON-ACTION':
+        if event == 'BOUTON-ACTION':
             if (temps_restant != 60):
                 premiere_fois = False
             if (not question_changee_succes):
