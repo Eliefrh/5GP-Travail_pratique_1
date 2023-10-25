@@ -54,6 +54,20 @@ class TestsMonsieurTartempion(unittest.TestCase):
 
     def test_changer_question (self) :
         """Vérifie que la fonction change la question affichée par une autre question"""
+        compteur = 1
+        prochaine_question = 1
+        questions, question_changement = choisir_questions(21)
+        fenetre = afficher_jeu()
+        question_changee_succes = False
+
+        changement_reussit = changer_question(compteur,prochaine_question,questions,\
+                                              question_changement,fenetre,question_changee_succes )
+
+        self.assertTrue(changement_reussit)
+
+
+
+
 
 
 if __name__ == "__main__":

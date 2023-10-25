@@ -213,19 +213,14 @@ def effacer_question(fenetre: gui.Window) -> None:
 def changer_question(compteur: int, prochaine_question: int, questions: tuple
                      , question_changee: tuple, fenetre: gui.Window, question_changee_succes : bool) -> bool:
     if (compteur== prochaine_question):
-        list_nouvelle_questoin = questions
-        list_nouvelle_questoin.pop(prochaine_question)
-
-        questions = (list_nouvelle_questoin)
-        questions.append(question_changee)
-
+        questions.pop(prochaine_question)
+        questions.append(question_changee[0])
         afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
-
         fenetre['CHANGER_QUESTION'].update(disabled=True)
         fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vide_base64())
         question_changee_succes = True
+
         return question_changee_succes
-        # print(len(questions))
 
     else:
         fenetre['MESSAGE'].update("Vous avez déjà réussi cette question!")
