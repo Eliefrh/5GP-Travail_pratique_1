@@ -259,12 +259,12 @@ def programme_principal() -> None:
         if event == 'CHANGER_QUESTION':
             if (compteur == prochaine_question):
                 # print('ca march')
-                list_nouvelle_questoin = questions
+                liste_nouvelle_question = questions
                 # print(list_nouvelle_questoin)
-                list_nouvelle_questoin.pop(prochaine_question)
+                liste_nouvelle_question.pop(prochaine_question)
                 # print("------------")
                 # print(list_nouvelle_questoin)
-                questions = (list_nouvelle_questoin)
+                questions = (liste_nouvelle_question)
                 questions.append(question_changee)
                 # print("------------")
                 # print(len(questions))
@@ -339,8 +339,11 @@ def programme_principal() -> None:
                 for i in range(prochaine_question):
                     fenetre[f'INDICATEUR-{i}'].update(data=indicateur_jaune_base64())
                     questions[i][1] = Indicateur.JAUNE
-                fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_rouge_base64())
-                questions[prochaine_question][1] = Indicateur.ROUGE
+
+                if questions[prochaine_question][1] != Indicateur.JAUNE:
+                    fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_rouge_base64())
+                    questions[prochaine_question][1] = Indicateur.ROUGE
+
                 prochaine_question = 0
                 reinitialiser_bouton_action(fenetre, False)
 
