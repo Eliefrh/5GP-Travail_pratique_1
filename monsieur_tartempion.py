@@ -74,14 +74,16 @@ def afficher_images(objet: str, temps: int) -> None:
     match objet:
         case 'equipe':
             gui.Window("Titre", [[gui.Image(data=images_base64["equipe"])]],
-                       no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
+                       transparent_color="maroon2", no_titlebar=True,
+                       keep_on_top=True).read(timeout=temps, close=True)
         case 'titre':
             gui.Window("Titre", [[gui.Image(data=images_base64["titre"])]],
-                       no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
+                       transparent_color="maroon2", no_titlebar=True,
+                       keep_on_top=True).read(timeout=temps, close=True)
         case 'echec':
             gui.Window("Titre", [[gui.Image(data=images_base64["echec"])]],
-                       transparent_color=gui.theme_background_color(),
-                       no_titlebar=True, keep_on_top=True).read(timeout=temps, close=True)
+                       transparent_color="maroon2", no_titlebar=True,
+                       keep_on_top=True).read(timeout=temps, close=True)
         case 'succes':
             gui.Window("Titre", [[gui.Image(data=images_base64["succes"])]],
                        transparent_color="maroon2", no_titlebar=True,
