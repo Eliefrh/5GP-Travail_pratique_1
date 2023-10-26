@@ -23,7 +23,7 @@ class TestsMonsieurTartempion(unittest.TestCase):
     def test_choisir_questions_nombre_questions_retournees(self):
         """Teste si la fonction choisir_questions retourne le nombre de questions désirées."""
         nombre_de_questions = 10
-        questions,_ = choisir_questions(nombre_de_questions)
+        questions, _ = choisir_questions(nombre_de_questions)
         self.assertEqual(len(questions), nombre_de_questions)
 
     def test_choisir_questions_uniques(self):
@@ -52,19 +52,17 @@ class TestsMonsieurTartempion(unittest.TestCase):
         temps = 3000
         self.assertIsNone(afficher_images(objet, temps))
 
-    def test_changer_question (self) :
+    def test_changer_question(self):
         """Vérifie que la fonction change la question affichée par une autre question"""
         compteur = 1
         prochaine_question = 1
         questions, question_changement = choisir_questions(21)
         fenetre = afficher_jeu()
 
-
         changement_reussit = changer_question(compteur, prochaine_question, questions,
                                               question_changement, fenetre)
 
         self.assertTrue(changement_reussit)
-
 
     def test_indicateur_jaune(self):
         """S'assurer que si la question etait bien réussi (indicateur jaune), l'indicateur restera jaune apres avoir
@@ -76,11 +74,9 @@ class TestsMonsieurTartempion(unittest.TestCase):
         questions[prochaine_question][1] = Indicateur.JAUNE
         mauvaise_reponse(fenetre, prochaine_question, questions)
 
-
         self.assertEqual(questions[0][1], Indicateur.JAUNE)
 
-
-    def test_ajout_nouvelle_question (self) :
+    def test_ajout_nouvelle_question(self):
         """Vérifier que la fontion changer_question() me retournee un bool qui me dit que la question a été
         bien modifiée"""
 
@@ -91,8 +87,49 @@ class TestsMonsieurTartempion(unittest.TestCase):
         nouvelles_questions_ajoutee = changer_question(compteur, prochaine_question,
                                                        questions, question_changement, fenetre)
 
-
         self.assertTrue(nouvelles_questions_ajoutee)
+
+    def test_mauvaise_reponse_indicateur_rouge(self):
+        """Teste si la fonction mauvaise_reponse modifie correctement l'indicateur."""
+        fenetre = afficher_jeu()
+        prochaine_question = 0
+        questions, _ = choisir_questions(21)
+        mauvaise_reponse(fenetre, prochaine_question, questions)
+        self.assertEqual(questions[0][1], Indicateur.ROUGE)
+
+    def test_bonne_reponse_indicateur_vert(self):
+        """Teste si la fonction bonne_reponse modifie correctement l'indicateur."""
+        compteur = 0
+        decompte_actif = True
+        fenetre = afficher_jeu()
+        prochaine_question = 0
+        question_changee = False
+        temps_restant = 40
+        questions, _ = choisir_questions(21)
+        question_changee_succes = False
+        premier_affichage_question = True
+        (prochaine_question, questions, compteur, _, question_changee, decompte_actif, temps_restant,
+         question_changee_succes) = bonne_reponse(
+            fenetre, prochaine_question, questions, compteur, premier_affichage_question,
+            question_changee, decompte_actif, temps_restant, question_changee_succes
+        )
+        self.assertEqual(questions[0][1], Indicateur.VERT)
+
+    def test_bouton_action(self):
+        """Vérifie que la fonction bouton_action gère correctement le décompte."""
+        fenetre = afficher_jeu()
+        premier_affichage_question = True
+        prochaine_question = 0
+        questions, question_changee = choisir_questions(NB_QUESTIONS)
+        temps_restant = 60
+        question_changee_succes = False
+        decompte_actif, premier_affichage_question, temps_actuel, questions, question_changee, prochaine_question = \
+            bouton_action(fenetre, premier_affichage_question, prochaine_question, question_changee_succes, questions,
+                          temps_restant, question_changee)
+
+        # Le décompte doit s'activer
+        self.assertTrue(decompte_actif)
+
 
 if __name__ == "__main__":
     unittest.main()
