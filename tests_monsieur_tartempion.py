@@ -40,7 +40,7 @@ class TestsMonsieurTartempion(unittest.TestCase):
     def test_melanger_reponses(self):
         """Vérifie que la méthode melanger_reponses renvoie un tuple avec des réponses mélangées."""
         reponses = ('Réponse A', 'Réponse B')
-        reponses_melangees = melanger_reponses(reponses,True, 5)
+        reponses_melangees = melanger_reponses(reponses)
 
         # Résultat contient les deux réponses mélangées
         self.assertTrue(reponses_melangees in [(reponses[0], reponses[1]), (reponses[1], reponses[0])])
@@ -58,10 +58,10 @@ class TestsMonsieurTartempion(unittest.TestCase):
         prochaine_question = 1
         questions, question_changement = choisir_questions(21)
         fenetre = afficher_jeu()
-        question_changee_succes = False
 
-        changement_reussit = changer_question(compteur,prochaine_question,questions,
-                                              question_changement, fenetre, question_changee_succes)
+
+        changement_reussit = changer_question(compteur, prochaine_question, questions,
+                                              question_changement, fenetre)
 
         self.assertTrue(changement_reussit)
 
@@ -70,15 +70,29 @@ class TestsMonsieurTartempion(unittest.TestCase):
         """S'assurer que si la question etait bien réussi (indicateur jaune), l'indicateur restera jaune apres avoir
         mal repondu la meme question dans une autre essaie """
 
-        decompte_actif = False
         fenetre = afficher_jeu()
         prochaine_question = 0
         questions, _ = choisir_questions(21)
         questions[prochaine_question][1] = Indicateur.JAUNE
-        mauvaise_reponse(decompte_actif, fenetre, prochaine_question, questions)
+        mauvaise_reponse(fenetre, prochaine_question, questions)
 
 
         self.assertEqual(questions[0][1], Indicateur.JAUNE)
+
+
+    def test_ajout_nouvelle_question (self) :
+        """Vérifier que la fontion changer_question() me retournee un bool qui me dit que la question a été
+        bien modifiée"""
+
+        compteur = 0
+        prochaine_question = 0
+        fenetre = afficher_jeu()
+        questions, question_changement = choisir_questions(21)
+        nouvelles_questions_ajoutee = changer_question(compteur, prochaine_question,
+                                                       questions, question_changement, fenetre)
+
+
+        self.assertTrue(nouvelles_questions_ajoutee)
 
 if __name__ == "__main__":
     unittest.main()
