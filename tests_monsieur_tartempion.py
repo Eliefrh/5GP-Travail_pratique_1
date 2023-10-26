@@ -8,7 +8,7 @@ class TestsMonsieurTartempion(unittest.TestCase):
         """Vérifier si la fonction afficher_jeu crée correctement la fenêtre de jeu."""
         fenetre = afficher_jeu()
 
-        # Vérifiez si la fenêtre a été créée avec les éléments attendus
+        # Vérifiez si la fenêtre est affiché avec les éléments attendus
         self.assertIsInstance(fenetre, gui.Window)
         self.assertIsNotNone(fenetre.find_element('TITLE'))
         self.assertIsNotNone(fenetre.find_element('MESSAGE'))
@@ -31,18 +31,18 @@ class TestsMonsieurTartempion(unittest.TestCase):
         nombre_de_questions = 21
         questions_selectionnees, _ = choisir_questions(nombre_de_questions)
 
-        # Éliminer doublons avec un tuple , car une tuple n'accepte pas les doublons
-        questions_tuple = tuple(question for question, _ in questions_selectionnees)
+        # Éliminer doublons avec un tuple
+        questions_tuple = tuple(questions_selectionnees)
 
-        # Vérifiez si la longueur du tuple est égale au nombre de questions sélectionnées.
+        # Vérification longueur du tuple est égale au nombre de questions sélectionnées.
         self.assertEqual(len(questions_tuple), len(questions_selectionnees))
 
     def test_melanger_reponses(self):
         """Vérifie que la méthode melanger_reponses renvoie un tuple avec des réponses mélangées."""
         reponses = ('Réponse A', 'Réponse B')
-        reponses_melangees = melanger_reponses(reponses,premier_affichage_question,0)
+        reponses_melangees = melanger_reponses(reponses, premier_affichage_question, 0)
 
-        # Résultat contient les deux réponses mélangées
+        # Résultat contient une des deux réponses
         self.assertTrue(reponses_melangees in [(reponses[0], reponses[1]), (reponses[1], reponses[0])])
 
     def test_afficher_images_temps_precis(self):
@@ -60,7 +60,7 @@ class TestsMonsieurTartempion(unittest.TestCase):
         fenetre = afficher_jeu()
 
         changement_reussit = changer_question(compteur, prochaine_question, questions,
-                                              question_changement, fenetre,premier_affichage_question)
+                                              question_changement, fenetre, premier_affichage_question)
 
         self.assertTrue(changement_reussit)
 
@@ -85,8 +85,8 @@ class TestsMonsieurTartempion(unittest.TestCase):
         fenetre = afficher_jeu()
         questions, question_changement = choisir_questions(21)
         nouvelles_questions_ajoutee = changer_question(compteur, prochaine_question,
-                                                       questions, question_changement, fenetre,premier_affichage_question)
-
+                                                       questions, question_changement, fenetre,
+                                                       premier_affichage_question)
         self.assertTrue(nouvelles_questions_ajoutee)
 
     def test_mauvaise_reponse_indicateur_rouge(self):
