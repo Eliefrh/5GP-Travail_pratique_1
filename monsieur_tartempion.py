@@ -24,8 +24,6 @@ import pickle
 import random
 import time
 import sqlite3 as squirrel
-from typing import Tuple
-
 import PySimpleGUI as gui
 
 from images import *
@@ -147,14 +145,19 @@ def afficher_jeu():
 
 
 def charger_questions(fichier_db: str) -> list:
-    connexion = squirrel.connect(fichier_db)
-    with connexion:
-        resultat_requete = connexion.execute('SELECT question, reponse_exacte, reponse_erronee FROM QUESTIONS')
+    try:
+        connexion = squirrel.connect(fichier_db)
 
-    toutes_questions = [(enregistrement[0], enregistrement[1], enregistrement[2]) \
-                        for enregistrement in resultat_requete]
+        with connexion:
+            resultat_requete = connexion.execute('SELECT question, reponse_exacte, reponse_erronee FROM QUESTIONS')
 
-    return toutes_questions
+        toutes_questions = [(enregistrement[0], enregistrement[1], enregistrement[2]) \
+                            for enregistrement in resultat_requete]
+
+        return toutes_questions
+    finally:
+        if connexion:
+            connexion.close()
 
 
 def choisir_questions(nombre_de_questions: int) -> list:
@@ -266,7 +269,6 @@ def bouton_action(fenetre, premiere_fois, prochaine_question, question_changee_s
         questions, question_changee = choisir_questions(NB_QUESTIONS)
         fenetre['CHANGER_QUESTION'].update(disabled=False)
 
-
     if not question_changee_succes:
         fenetre['CHANGER_QUESTION'].update(disabled=False)
     reinitialiser_bouton_action(fenetre, True)
@@ -311,6 +313,7 @@ def bonne_reponse(fenetre, prochaine_question, questions, compteur, premiere_foi
 
     return prochaine_question, questions, compteur, premiere_fois, question_changee, decompte_actif, temps_restant
 
+
 def mauvaise_reponse(decompte_actif, fenetre, prochaine_question, questions):
     decompte_actif = False
     effacer_question(fenetre)
@@ -328,6 +331,7 @@ def mauvaise_reponse(decompte_actif, fenetre, prochaine_question, questions):
     Son.ERREUR.play()
     Son.QUESTION.stop()
     return decompte_actif, prochaine_question
+
 
 def programme_principal() -> None:
     temps_restant = 5
@@ -394,9 +398,9 @@ def programme_principal() -> None:
                         1]):
 
                 # le joueur a choisi la bonne réponse
-                prochaine_question, questions, compteur, premiere_fois, question_changee, decompte_actif, temps_restant = (
-                    bonne_reponse(fenetre, prochaine_question, questions, compteur, premiere_fois, question_changee,
-                                  decompte_actif, temps_restant))
+                (prochaine_question, questions, compteur, premiere_fois, question_changee, decompte_actif,
+                 temps_restant) = bonne_reponse(fenetre, prochaine_question, questions, compteur, premiere_fois,
+                                                question_changee, decompte_actif, temps_restant)
                 print(len(questions))
                 continue
             else:
@@ -412,7 +416,8 @@ def programme_principal() -> None:
     del fenetre
 
 
-
-
 if __name__ == '__main__':
-    programme_principal()
+    try:
+        programme_principal()
+    except KeyboardInterrupt:
+        print("Le programme a été arrêté par l'utilisateur.")
