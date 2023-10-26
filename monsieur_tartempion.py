@@ -24,6 +24,8 @@ import pickle
 import random
 import time
 import sqlite3 as squirrel
+from typing import Tuple
+
 import PySimpleGUI as gui
 
 from images import *
@@ -221,12 +223,14 @@ def effacer_question(fenetre: gui.Window) -> None:
     mettre_a_jour_widgets(fenetre, ('', '', ''), True, gui.theme_background_color())
 
 
-def reinitialiser_jeu(fenetre) -> tuple[tuple, int, bool, bool, int, tuple]:
+def reinitialiser_jeu(fenetre) -> tuple[tuple, int, bool, bool, int, tuple, int, bool]:
     reinitialiser_bouton_action(fenetre, False)
     temps_restant = TEMPS_EPREUVE
     fenetre['TEMPS'].update(str(temps_restant))
     fenetre['CHANGER_QUESTION'].update(disabled=True)
     fenetre.un_hide()
+    for i in range(NB_QUESTIONS):
+        fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
 
     # questions, question_changee = choisir_questions(NB_QUESTIONS)
     questions = ()
@@ -235,8 +239,10 @@ def reinitialiser_jeu(fenetre) -> tuple[tuple, int, bool, bool, int, tuple]:
     compteur = 0
     question_changee_succes = False
     premiere_fois = True
+    decompte_actif = False
     print(prochaine_question)
-    return questions, prochaine_question, question_changee_succes, premiere_fois, compteur, question_changee
+    return (questions, prochaine_question, question_changee_succes, premiere_fois, compteur, question_changee,
+            temps_restant, decompte_actif)
 
 
 def reinitialiser_bouton_action(fenetre, activation_bouton: bool) -> None:
@@ -296,22 +302,14 @@ def bonne_reponse(fenetre, prochaine_question, questions, compteur, premiere_foi
     if prochaine_question < NB_QUESTIONS:
         afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
     elif NB_QUESTIONS <= prochaine_question:
-        decompte_actif = False
         fenetre.hide()
         effacer_question(fenetre)
-        for i in range(NB_QUESTIONS):
-            fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
-            questions[i][1] = Indicateur.VIDE
         Son.QUESTION.stop()
         Son.VICTOIRE.play()
-        temps_restant = 60
-
         afficher_images('succes', 3000)
-        (questions, prochaine_question, question_changee_succes, premiere_fois, compteur,
-         question_changee) = reinitialiser_jeu(fenetre)
-        prochaine_question = 0
-        compteur = 0
-        questions = ([])
+        (questions, prochaine_question, question_changee_succes, premiere_fois, compteur, question_changee,
+         temps_restant, decompte_actif) = (
+            reinitialiser_jeu(fenetre))
 
     return prochaine_question, questions, compteur, premiere_fois, question_changee, decompte_actif, temps_restant
 
@@ -335,8 +333,35 @@ def mauvaise_reponse(decompte_actif, fenetre, prochaine_question, questions):
     return decompte_actif, prochaine_question
 
 
+def gerer_fermeture_fenetre(decompte_actif, quitter):
+    decompte_actif = False
+    quitter = True
+    return decompte_actif, quitter
+
+
+def gestion_temps(temps_actuel, temps_restant, prochaine_question, decompte_actif, fenetre):
+    dernier_temps = temps_actuel
+    temps_actuel = round(time.time())
+
+    if dernier_temps != temps_actuel:
+        temps_restant -= 1
+        fenetre['TEMPS'].update(str(temps_restant))
+
+        if temps_restant == 0:
+            fenetre.hide()
+            effacer_question(fenetre)
+            Son.FIN_PARTIE.play()
+            Son.QUESTION.stop()
+            afficher_images('echec', 3000)
+
+            (questions, prochaine_question, question_changee_succes, premiere_fois, compteur, question_changee,
+             temps_restant, decompte_actif) = reinitialiser_jeu(fenetre)
+
+    return temps_actuel, temps_restant, prochaine_question, decompte_actif
+
+
 def programme_principal() -> None:
-    temps_restant = 5
+    temps_restant = 60
     prochaine_question = 0
     compteur = 0
     decompte_actif = False
@@ -358,31 +383,33 @@ def programme_principal() -> None:
         event, valeurs = fenetre.read(timeout=10)
 
         if decompte_actif:
-            dernier_temps = temps_actuel
-            temps_actuel = round(time.time())
-            if dernier_temps != temps_actuel:
-                temps_restant -= 1
-                fenetre['TEMPS'].update(str(temps_restant))
-                if temps_restant == 0:
-                    decompte_actif = False
-                    fenetre.hide()
-                    effacer_question(fenetre)
-                    (questions, prochaine_question, question_changee_succes, premiere_fois, compteur,
-                     question_changee) = reinitialiser_jeu(fenetre)
+            temps_actuel, temps_restant, prochaine_question, decompte_actif = (
+                gestion_temps(temps_actuel, temps_restant, prochaine_question, decompte_actif, fenetre))
+            # dernier_temps = temps_actuel
+            # temps_actuel = round(time.time())
+            # if dernier_temps != temps_actuel:
+            #     temps_restant -= 1
+            #     fenetre['TEMPS'].update(str(temps_restant))
+            #     if temps_restant == 0:
+            #         decompte_actif = False
+            #         fenetre.hide()
+            #         effacer_question(fenetre)
+            #         (questions, prochaine_question, question_changee_succes, premiere_fois, compteur,
+            #          question_changee) = reinitialiser_jeu(fenetre)
+            #
+            #         for i in range(NB_QUESTIONS):
+            #             fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
+            #
+            #         Son.FIN_PARTIE.play()
+            #         Son.QUESTION.stop()
+            #         fenetre.hide()
+            #
+            #         temps_restant = 60
+            #         afficher_images('echec', 3000)
+            #         fenetre.un_hide()
+            #         print(prochaine_question)
 
-                    for i in range(NB_QUESTIONS):
-                        fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
-
-                    Son.FIN_PARTIE.play()
-                    Son.QUESTION.stop()
-                    fenetre.hide()
-
-                    temps_restant = 60
-                    afficher_images('echec', 3000)
-                    fenetre.un_hide()
-                    print(prochaine_question)
-
-                    continue
+            # continue
 
         if event == 'CHANGER_QUESTION':
             question_changee_succes = changer_question(compteur, prochaine_question,
@@ -401,8 +428,9 @@ def programme_principal() -> None:
 
                 # le joueur a choisi la bonne réponse
                 (prochaine_question, questions, compteur, premiere_fois, question_changee, decompte_actif,
-                 temps_restant) = bonne_reponse(fenetre, prochaine_question, questions, compteur, premiere_fois,
-                                                question_changee, decompte_actif, temps_restant)
+                 temps_restant) = (
+                    bonne_reponse(fenetre, prochaine_question, questions, compteur, premiere_fois,
+                                  question_changee, decompte_actif, temps_restant))
                 print(len(questions))
                 continue
             else:
@@ -411,8 +439,7 @@ def programme_principal() -> None:
                                                                       questions)
 
         elif event == gui.WIN_CLOSED:
-            decompte_actif = False
-            quitter = True
+            decompte_actif, quitter = gerer_fermeture_fenetre(decompte_actif, quitter)
 
     fenetre.close()
     del fenetre
