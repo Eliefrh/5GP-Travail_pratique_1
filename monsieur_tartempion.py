@@ -159,12 +159,18 @@ def charger_questions(fichier_db: str) -> list:
 def choisir_questions(nombre_de_questions: int) -> list:
     toutes_les_questions = charger_questions("questions.bd")
 
-    questions_selectionnees = [[question, Indicateur.VIDE] \
-                               for question in random.choices(toutes_les_questions, k=nombre_de_questions)]
-    question_changement = [[question, Indicateur.VIDE] \
-                           for question in random.choices(toutes_les_questions, k=1)]
+    random.shuffle(toutes_les_questions)
+
+    questions_selectionnees = []
+    for i in range(min(nombre_de_questions, len(toutes_les_questions))):
+        questions_selectionnees.append([toutes_les_questions[i], Indicateur.VIDE])
+
+    question_changement = []
+    if len(toutes_les_questions) > nombre_de_questions:
+        question_changement = [[toutes_les_questions[nombre_de_questions], Indicateur.VIDE]]
 
     return questions_selectionnees, question_changement
+
 
 
 def melanger_reponses(reponses: tuple, premiere_fois: bool, numero_question: int) -> tuple:

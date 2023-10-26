@@ -31,7 +31,7 @@ class TestsMonsieurTartempion(unittest.TestCase):
         nombre_de_questions = 21
         questions_selectionnees, _ = choisir_questions(nombre_de_questions)
 
-        # Éliminer doublons avec un tuple
+        # Éliminer doublons avec un tuple , car une tuple n'accepte pas les doublons
         questions_tuple = tuple(question for question, _ in questions_selectionnees)
 
         # Vérifiez si la longueur du tuple est égale au nombre de questions sélectionnées.
