@@ -152,7 +152,7 @@ def charger_questions(fichier_db: str) -> list:
         with connexion:
             resultat_requete = connexion.execute('SELECT question, reponse_exacte, reponse_erronee FROM QUESTIONS')
 
-        toutes_questions = [(enregistrement[0], enregistrement[1], enregistrement[2]) \
+        toutes_questions = [(enregistrement[0], enregistrement[1], enregistrement[2])
                             for enregistrement in resultat_requete]
 
         return toutes_questions
@@ -183,7 +183,6 @@ def melanger_reponses(reponses: tuple, premier_affichage_question: bool, numero_
      - on stock l'ordre des reponses a partir de leur boolean dans une liste
      - on revient chercher la position dans la liste si ce nest pas la premiere fois pour cette question"""
 
-    # print(len(ordre_affichage))
     # if (numero_question + 1 > len(ordre_affichage)):
     #     premier_affichage_question = True
     # if (premier_affichage_question):
@@ -193,10 +192,8 @@ def melanger_reponses(reponses: tuple, premier_affichage_question: bool, numero_
     #     return (reponses[0], reponses[1]) if ordre else (reponses[1], reponses[0])
     # else:
     #     if (ordre_affichage[numero_question] == True):
-    #         # print(ordre_affichage[numero_question])
     #         return (reponses[0], reponses[1])
     #     else:
-    #         # print(ordre_affichage[numero_question])
     #         return (reponses[1], reponses[0])
     return (reponses[0], reponses[1])
 
@@ -234,7 +231,6 @@ def reinitialiser_jeu(fenetre) -> tuple[tuple, int, bool, bool, int, tuple]:
     compteur = 0
     question_changee_succes = False
     premier_affichage_question = True
-    print(prochaine_question)
     return questions, prochaine_question, question_changee_succes, premier_affichage_question, compteur, question_changee
 
 
@@ -257,6 +253,7 @@ def changer_question(compteur: int, prochaine_question: int, questions: tuple
 
     else:
         fenetre['MESSAGE'].update("Vous avez déjà réussi cette question!")
+        question_changee_succes = False
         return question_changee_succes
 
 
@@ -269,20 +266,21 @@ def bouton_action(fenetre, premier_affichage_question, prochaine_question, quest
         prochaine_question = 0
         questions, question_changee = choisir_questions(NB_QUESTIONS)
         fenetre['CHANGER_QUESTION'].update(disabled=False)
+        question_changee_succes = False
 
     if not question_changee_succes:
         fenetre['CHANGER_QUESTION'].update(disabled=False)
     reinitialiser_bouton_action(fenetre, True)
     temps_actuel = round(time.time())
     decompte_actif = True
-    print(len(questions))
     afficher(fenetre, questions[prochaine_question][0], premier_affichage_question, prochaine_question)
     Son.QUESTION.play()
+
     return decompte_actif, premier_affichage_question, temps_actuel, questions, question_changee, prochaine_question
 
 
 def bonne_reponse(fenetre, prochaine_question, questions, compteur, premier_affichage_question, question_changee, decompte_actif,
-                  temps_restant):
+                  temps_restant,question_changee_succes):
     fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vert_base64())
     fenetre['MESSAGE'].update("")
 
@@ -303,6 +301,7 @@ def bonne_reponse(fenetre, prochaine_question, questions, compteur, premier_affi
             questions[i][1] = Indicateur.VIDE
         Son.QUESTION.stop()
         Son.VICTOIRE.play()
+        question_changee_succes = False
         temps_restant = 60
 
         afficher_images('succes', 3000)
@@ -312,14 +311,13 @@ def bonne_reponse(fenetre, prochaine_question, questions, compteur, premier_affi
         compteur = 0
         questions = ([])
 
-    return prochaine_question, questions, compteur, premier_affichage_question, question_changee, decompte_actif, temps_restant
+    return prochaine_question, questions, compteur, premier_affichage_question, question_changee, decompte_actif, temps_restant , question_changee_succes
 
 
-def mauvaise_reponse(decompte_actif, fenetre, prochaine_question, questions):
+def mauvaise_reponse(decompte_actif, fenetre, prochaine_question, questions, question_changee_succes):
     decompte_actif = False
     effacer_question(fenetre)
     fenetre['CHANGER_QUESTION'].update(disabled=True)
-
     fenetre['MESSAGE'].update("")
     for i in range(prochaine_question):
         fenetre[f'INDICATEUR-{i}'].update(data=indicateur_jaune_base64())
@@ -331,11 +329,13 @@ def mauvaise_reponse(decompte_actif, fenetre, prochaine_question, questions):
     reinitialiser_bouton_action(fenetre, False)
     Son.ERREUR.play()
     Son.QUESTION.stop()
+
+
     return decompte_actif, prochaine_question
 
 
 def programme_principal() -> None:
-    temps_restant = 5
+    temps_restant = 60
     prochaine_question = 0
     compteur = 0
     decompte_actif = False
@@ -346,12 +346,10 @@ def programme_principal() -> None:
     afficher_images('equipe', 1500)
     afficher_images('titre', 2000)
     questions, question_changee = choisir_questions(NB_QUESTIONS)
-    # print(questions)
     fenetre = afficher_jeu()
     premier_affichage_question = True
     quitter = False
 
-    # print(questions)
 
     while not quitter:
         event, valeurs = fenetre.read(timeout=10)
@@ -379,7 +377,6 @@ def programme_principal() -> None:
                     temps_restant = 60
                     afficher_images('echec', 3000)
                     fenetre.un_hide()
-                    print(prochaine_question)
 
                     continue
 
@@ -400,14 +397,13 @@ def programme_principal() -> None:
 
                 # le joueur a choisi la bonne réponse
                 (prochaine_question, questions, compteur, premier_affichage_question, question_changee, decompte_actif,
-                 temps_restant) = bonne_reponse(fenetre, prochaine_question, questions, compteur, premier_affichage_question,
-                                                question_changee, decompte_actif, temps_restant)
-                print(len(questions))
+                 temps_restant,question_changee_succes) = bonne_reponse(fenetre, prochaine_question, questions, compteur, premier_affichage_question,
+                                                question_changee, decompte_actif, temps_restant,question_changee_succes)
                 continue
             else:
                 # le joueur a choisi la mauvais réponse
                 decompte_actif, prochaine_question = mauvaise_reponse(decompte_actif, fenetre, prochaine_question,
-                                                                      questions)
+                                                                      questions,question_changee_succes)
 
         elif event == gui.WIN_CLOSED:
             decompte_actif = False
@@ -415,6 +411,7 @@ def programme_principal() -> None:
 
     fenetre.close()
     del fenetre
+
 
 
 if __name__ == '__main__':
