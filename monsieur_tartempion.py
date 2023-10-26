@@ -311,9 +311,26 @@ def bonne_reponse(fenetre, prochaine_question, questions, compteur, premiere_foi
 
     return prochaine_question, questions, compteur, premiere_fois, question_changee, decompte_actif, temps_restant
 
+def mauvaise_reponse(decompte_actif, fenetre, prochaine_question, questions):
+    decompte_actif = False
+    effacer_question(fenetre)
+    fenetre['CHANGER_QUESTION'].update(disabled=True)
+
+    fenetre['MESSAGE'].update("")
+    for i in range(prochaine_question):
+        fenetre[f'INDICATEUR-{i}'].update(data=indicateur_jaune_base64())
+        questions[i][1] = Indicateur.JAUNE
+    if questions[prochaine_question][1] != Indicateur.JAUNE:
+        fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_rouge_base64())
+        questions[prochaine_question][1] = Indicateur.ROUGE
+    prochaine_question = 0
+    reinitialiser_bouton_action(fenetre, False)
+    Son.ERREUR.play()
+    Son.QUESTION.stop()
+    return decompte_actif, prochaine_question
 
 def programme_principal() -> None:
-    temps_restant = 60
+    temps_restant = 5
     prochaine_question = 0
     compteur = 0
     decompte_actif = False
@@ -384,23 +401,8 @@ def programme_principal() -> None:
                 continue
             else:
                 # le joueur a choisi la mauvais réponse
-                decompte_actif = False
-                effacer_question(fenetre)
-                fenetre['MESSAGE'].update("")
-
-                for i in range(prochaine_question):
-                    fenetre[f'INDICATEUR-{i}'].update(data=indicateur_jaune_base64())
-                    questions[i][1] = Indicateur.JAUNE
-
-                if questions[prochaine_question][1] != Indicateur.JAUNE:
-                    fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_rouge_base64())
-                    questions[prochaine_question][1] = Indicateur.ROUGE
-
-                prochaine_question = 0
-                reinitialiser_bouton_action(fenetre, False)
-
-                Son.ERREUR.play()
-                Son.QUESTION.stop()
+                decompte_actif, prochaine_question = mauvaise_reponse(decompte_actif, fenetre, prochaine_question,
+                                                                      questions)
 
         elif event == gui.WIN_CLOSED:
             decompte_actif = False
@@ -408,6 +410,8 @@ def programme_principal() -> None:
 
     fenetre.close()
     del fenetre
+
+
 
 
 if __name__ == '__main__':
