@@ -25,7 +25,6 @@ import random
 import time
 import sqlite3 as squirrel
 from typing import Any
-
 import PySimpleGUI as gui
 from images import *
 from indicateurs import Indicateur
@@ -179,15 +178,14 @@ def choisir_questions(nombre_de_questions: int) -> list:
     return questions_selectionnees, question_changement
 
 
-def melanger_reponses(reponses: tuple) -> tuple:
+def melanger_reponses(reponses: tuple, premiere_fois: bool, numero_question: int) -> tuple:
     """On fait une verification si la question est posée pour la premiere fois
      - on verifie cela par la boolean premiere fois et le numero de la question
      - on stock l'ordre des reponses a partir de leur boolean dans une liste
      - on revient chercher la position dans la liste si ce nest pas la premiere fois pour cette question"""
-
     # if (numero_question + 1 > len(ordre_affichage)):
-    #     premier_affichage_question = True
-    # if (premier_affichage_question):
+    #     premiere_fois = True
+    # if (premiere_fois):
     #     ordre = bool(random.getrandbits(1))
     #
     #     ordre_affichage.append(ordre)
@@ -197,6 +195,7 @@ def melanger_reponses(reponses: tuple) -> tuple:
     #         return (reponses[0], reponses[1])
     #     else:
     #         return (reponses[1], reponses[0])
+
     return reponses[0], reponses[1]
 
 
@@ -207,9 +206,9 @@ def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif
     fenetre['BOUTON-DROIT'].update(reponses[1], disabled=bouton_est_actif, visible=True)
 
 
-def afficher(fenetre: gui.Window, question: tuple) -> None:
+def afficher(fenetre: gui.Window, question: tuple, premiere_fois: bool, numero_questoin: int) -> None:
     fenetre['QUESTION'].update(question[0])
-    reponses = melanger_reponses((question[1], question[2]))
+    reponses = melanger_reponses((question[1], question[2]), premiere_fois, numero_questoin)
     # reponses = question[1], question[2]
     mettre_a_jour_widgets(fenetre, reponses, False, 'white')
 
@@ -245,11 +244,11 @@ def reinitialiser_bouton_action(fenetre, activation_bouton: bool) -> None:
 
 
 def changer_question(compteur: int, prochaine_question: int, questions: tuple,
-                     question_changee: tuple, fenetre: gui.Window) -> bool:
+                     question_changee: tuple, fenetre: gui.Window, premier_affichage_question) -> bool:
     if compteur == prochaine_question:
         questions.pop(prochaine_question)
         questions.append(question_changee[0])
-        afficher(fenetre, questions[prochaine_question][0])
+        afficher(fenetre, questions[prochaine_question][0], premier_affichage_question, prochaine_question)
         fenetre['CHANGER_QUESTION'].update(disabled=True)
         fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vide_base64())
         question_changee_succes = True
@@ -278,7 +277,7 @@ def bouton_action(fenetre, premier_affichage_question, prochaine_question, quest
     reinitialiser_bouton_action(fenetre, True)
     temps_actuel = round(time.time())
     decompte_actif = True
-    afficher(fenetre, questions[prochaine_question][0])
+    afficher(fenetre, questions[prochaine_question][0], premier_affichage_question, prochaine_question)
     Son.QUESTION.play()
 
     return decompte_actif, premier_affichage_question, temps_actuel, questions, question_changee, prochaine_question
@@ -296,7 +295,7 @@ def bonne_reponse(fenetre, prochaine_question, questions, compteur, premier_affi
     prochaine_question += 1
 
     if prochaine_question < NB_QUESTIONS:
-        afficher(fenetre, questions[prochaine_question][0])
+        afficher(fenetre, questions[prochaine_question][0], premier_affichage_question, prochaine_question)
     elif NB_QUESTIONS <= prochaine_question:
 
         fenetre.hide()
@@ -395,7 +394,7 @@ def programme_principal() -> None:
 
         if event == 'CHANGER_QUESTION':
             question_changee_succes = changer_question(compteur, prochaine_question,
-                                                       questions, question_changee, fenetre)
+                                                       questions, question_changee, fenetre, premier_affichage_question)
 
         elif event == 'BOUTON-ACTION':
             (decompte_actif, premier_affichage_question, temps_actuel, questions, question_changee,

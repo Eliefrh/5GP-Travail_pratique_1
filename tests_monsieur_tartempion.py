@@ -40,7 +40,7 @@ class TestsMonsieurTartempion(unittest.TestCase):
     def test_melanger_reponses(self):
         """Vérifie que la méthode melanger_reponses renvoie un tuple avec des réponses mélangées."""
         reponses = ('Réponse A', 'Réponse B')
-        reponses_melangees = melanger_reponses(reponses)
+        reponses_melangees = melanger_reponses(reponses,premier_affichage_question,0)
 
         # Résultat contient les deux réponses mélangées
         self.assertTrue(reponses_melangees in [(reponses[0], reponses[1]), (reponses[1], reponses[0])])
@@ -60,7 +60,7 @@ class TestsMonsieurTartempion(unittest.TestCase):
         fenetre = afficher_jeu()
 
         changement_reussit = changer_question(compteur, prochaine_question, questions,
-                                              question_changement, fenetre)
+                                              question_changement, fenetre,premier_affichage_question)
 
         self.assertTrue(changement_reussit)
 
@@ -85,7 +85,7 @@ class TestsMonsieurTartempion(unittest.TestCase):
         fenetre = afficher_jeu()
         questions, question_changement = choisir_questions(21)
         nouvelles_questions_ajoutee = changer_question(compteur, prochaine_question,
-                                                       questions, question_changement, fenetre)
+                                                       questions, question_changement, fenetre,premier_affichage_question)
 
         self.assertTrue(nouvelles_questions_ajoutee)
 
@@ -108,10 +108,11 @@ class TestsMonsieurTartempion(unittest.TestCase):
         questions, _ = choisir_questions(21)
         question_changee_succes = False
         premier_affichage_question = True
-        (_, questions, _, _, _, _, _, _) = bonne_reponse(
-            fenetre, prochaine_question, questions, compteur, premier_affichage_question,
-            question_changee, decompte_actif, temps_restant, question_changee_succes
-        )
+        (_, questions, _, _, _, _, _, _) = bonne_reponse(fenetre, prochaine_question, questions,
+                                                         compteur, premier_affichage_question, question_changee,
+                                                         decompte_actif, temps_restant, question_changee_succes
+                                                         )
+
         self.assertEqual(questions[0][1], Indicateur.VERT)
 
     def test_bouton_action(self):
