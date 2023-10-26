@@ -282,6 +282,7 @@ def programme_principal() -> None:
 
 
 
+
         if event == 'BOUTON-ACTION':
             if (temps_restant != 60):
                 premiere_fois = False
@@ -340,8 +341,11 @@ def programme_principal() -> None:
                 for i in range(prochaine_question):
                     fenetre[f'INDICATEUR-{i}'].update(data=indicateur_jaune_base64())
                     questions[i][1] = Indicateur.JAUNE
-                fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_rouge_base64())
-                questions[prochaine_question][1] = Indicateur.ROUGE
+
+                if questions[prochaine_question][1] != Indicateur.JAUNE:
+                    fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_rouge_base64())
+                    questions[prochaine_question][1] = Indicateur.ROUGE
+
                 prochaine_question = 0
                 reinitialiser_bouton_action(fenetre, False)
 
