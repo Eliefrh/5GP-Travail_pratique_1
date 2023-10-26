@@ -22,9 +22,10 @@ Ressources sous licences:
 """
 import pickle
 import random
-import simpleaudio as sa
 import time
 import sqlite3 as squirrel
+from typing import Tuple
+
 import PySimpleGUI as gui
 
 from images import *
@@ -42,7 +43,7 @@ police_question = (type_font, 30, 'normal')
 police_reponses = (type_font, 20, 'normal')
 police_choix = (type_font, 20, 'italic')
 
-ordre_affichage: bool = []
+ordre_affichage = []
 premiere_fois = True
 
 """Crée un fichier pickle contenant les images encodées en base64."""
@@ -94,13 +95,13 @@ def afficher_jeu():
 
     message_label = [gui.Text('', key='MESSAGE', font=police_etiquettes, text_color='red', size=(30, 1))]
 
-    bouton_changer_question = gui.Button('Changer Question', key='CHANGER_QUESTION', font=(type_font, 18, \
+    bouton_changer_question = gui.Button('Changer Question', key='CHANGER_QUESTION', font=(type_font, 18,
                                                                                            'normal'),
                                          button_color=('white', 'blue'),
                                          border_width=0, disabled=True, visible=True)
 
-    espace_droit = gui.Column([[gui.Text('', key='', size=(125, 1)) \
-                                   , bouton_changer_question]], element_justification='center')
+    espace_droit = gui.Column([[gui.Text('', key='', size=(125, 1)),
+                                bouton_changer_question]], element_justification='center')
 
     titre = [gui.Text(TITRE, key='TITLE', font=police_titre)]
 
@@ -140,7 +141,7 @@ def afficher_jeu():
         [espace_droit]
     ]
 
-    fenetre = gui.Window(TITRE, layout, keep_on_top=True, \
+    fenetre = gui.Window(TITRE, layout, keep_on_top=True,
                          element_padding=(0, 0), element_justification='center', resizable=False, finalize=True)
     return fenetre
 
@@ -172,7 +173,6 @@ def choisir_questions(nombre_de_questions: int) -> list:
     return questions_selectionnees, question_changement
 
 
-
 def melanger_reponses(reponses: tuple, premiere_fois: bool, numero_question: int) -> tuple:
     """On fait une verification si la question est posée pour la premiere fois
      - on verifie cela par la boolean premiere fois et le numero de la question
@@ -180,21 +180,21 @@ def melanger_reponses(reponses: tuple, premiere_fois: bool, numero_question: int
      - on revient chercher la position dans la liste si ce nest pas la premiere fois pour cette question"""
 
     # print(len(ordre_affichage))
-    if (numero_question + 1 > len(ordre_affichage)):
-        premiere_fois = True
-    if (premiere_fois):
-        ordre = bool(random.getrandbits(1))
-
-        ordre_affichage.append(ordre)
-        return (reponses[0], reponses[1]) if ordre else (reponses[1], reponses[0])
-    else:
-        if (ordre_affichage[numero_question] == True):
-            # print(ordre_affichage[numero_question])
-            return (reponses[0], reponses[1])
-        else:
-            # print(ordre_affichage[numero_question])
-            return (reponses[1], reponses[0])
-    # return (reponses[0], reponses[1])
+    # if (numero_question + 1 > len(ordre_affichage)):
+    #     premiere_fois = True
+    # if (premiere_fois):
+    #     ordre = bool(random.getrandbits(1))
+    #
+    #     ordre_affichage.append(ordre)
+    #     return (reponses[0], reponses[1]) if ordre else (reponses[1], reponses[0])
+    # else:
+    #     if (ordre_affichage[numero_question] == True):
+    #         # print(ordre_affichage[numero_question])
+    #         return (reponses[0], reponses[1])
+    #     else:
+    #         # print(ordre_affichage[numero_question])
+    #         return (reponses[1], reponses[0])
+    return (reponses[0], reponses[1])
 
 
 # Duplication élliminée
@@ -204,9 +204,9 @@ def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif
     fenetre['BOUTON-DROIT'].update(reponses[1], disabled=bouton_est_actif, visible=True)
 
 
-def afficher(fenetre: gui.Window, question: tuple, premiere_fois: bool, numero_questoin: int) -> None:
+def afficher(fenetre: gui.Window, question: tuple, premiere_fois: bool, numero_question: int) -> None:
     fenetre['QUESTION'].update(question[0])
-    reponses = melanger_reponses((question[1], question[2]), premiere_fois, numero_questoin)
+    reponses = melanger_reponses((question[1], question[2]), premiere_fois, numero_question)
     # reponses = question[1], question[2]
     mettre_a_jour_widgets(fenetre, reponses, False, 'white')
 
@@ -216,9 +216,32 @@ def effacer_question(fenetre: gui.Window) -> None:
     mettre_a_jour_widgets(fenetre, ('', '', ''), True, gui.theme_background_color())
 
 
+def reinitialiser_jeu(fenetre) -> tuple[tuple, int, bool, bool, int, tuple]:
+    reinitialiser_bouton_action(fenetre, False)
+    temps_restant = TEMPS_EPREUVE
+    fenetre['TEMPS'].update(str(temps_restant))
+    fenetre['CHANGER_QUESTION'].update(disabled=True)
+    fenetre.un_hide()
+
+    # questions, question_changee = choisir_questions(NB_QUESTIONS)
+    questions = ()
+    question_changee = ()
+    prochaine_question = 0
+    compteur = 0
+    question_changee_succes = False
+    premiere_fois = True
+    print(prochaine_question)
+    return questions, prochaine_question, question_changee_succes, premiere_fois, compteur, question_changee
+
+
+def reinitialiser_bouton_action(fenetre, activation_bouton: bool) -> None:
+    fenetre['BOUTON-ACTION'].update(disabled=activation_bouton, visible=not activation_bouton)
+    fenetre['IMAGE-BOUTON-INACTIF'].update(visible=activation_bouton)
+
+
 def changer_question(compteur: int, prochaine_question: int, questions: tuple
-                     , question_changee: tuple, fenetre: gui.Window, question_changee_succes : bool) -> bool:
-    if (compteur== prochaine_question):
+                     , question_changee: tuple, fenetre: gui.Window, question_changee_succes: bool) -> bool:
+    if (compteur == prochaine_question):
         questions.pop(prochaine_question)
         questions.append(question_changee[0])
         afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
@@ -232,6 +255,63 @@ def changer_question(compteur: int, prochaine_question: int, questions: tuple
         fenetre['MESSAGE'].update("Vous avez déjà réussi cette question!")
         return question_changee_succes
 
+
+def bouton_action(fenetre, premiere_fois, prochaine_question, question_changee_succes, questions,
+                  temps_restant, question_changee):
+    if temps_restant != 60:
+        premiere_fois = False
+
+    if temps_restant == 60:
+        prochaine_question = 0
+        questions, question_changee = choisir_questions(NB_QUESTIONS)
+        fenetre['CHANGER_QUESTION'].update(disabled=False)
+
+
+    if not question_changee_succes:
+        fenetre['CHANGER_QUESTION'].update(disabled=False)
+    reinitialiser_bouton_action(fenetre, True)
+    temps_actuel = round(time.time())
+    decompte_actif = True
+    print(len(questions))
+    afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
+    Son.QUESTION.play()
+    return decompte_actif, premiere_fois, temps_actuel, questions, question_changee, prochaine_question
+
+
+def bonne_reponse(fenetre, prochaine_question, questions, compteur, premiere_fois, question_changee, decompte_actif,
+                  temps_restant):
+    fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vert_base64())
+    fenetre['MESSAGE'].update("")
+
+    questions[prochaine_question][1] = Indicateur.VERT
+    if prochaine_question == compteur:
+        compteur += 1
+
+    prochaine_question += 1
+
+    if prochaine_question < NB_QUESTIONS:
+        afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
+    elif NB_QUESTIONS <= prochaine_question:
+        decompte_actif = False
+        fenetre.hide()
+        effacer_question(fenetre)
+        for i in range(NB_QUESTIONS):
+            fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
+            questions[i][1] = Indicateur.VIDE
+        Son.QUESTION.stop()
+        Son.VICTOIRE.play()
+        temps_restant = 60
+
+        afficher_images('succes', 3000)
+        (questions, prochaine_question, question_changee_succes, premiere_fois, compteur,
+         question_changee) = reinitialiser_jeu(fenetre)
+        prochaine_question = 0
+        compteur = 0
+        questions = ([])
+
+    return prochaine_question, questions, compteur, premiere_fois, question_changee, decompte_actif, temps_restant
+
+
 def programme_principal() -> None:
     temps_restant = 60
     prochaine_question = 0
@@ -243,7 +323,7 @@ def programme_principal() -> None:
     # Appel des fonctions
     afficher_images('equipe', 1500)
     afficher_images('titre', 2000)
-    questions, question_changee = choisir_questions(21)
+    questions, question_changee = choisir_questions(NB_QUESTIONS)
     # print(questions)
     fenetre = afficher_jeu()
     premiere_fois = True
@@ -264,38 +344,32 @@ def programme_principal() -> None:
                     decompte_actif = False
                     fenetre.hide()
                     effacer_question(fenetre)
+                    (questions, prochaine_question, question_changee_succes, premiere_fois, compteur,
+                     question_changee) = reinitialiser_jeu(fenetre)
 
                     for i in range(NB_QUESTIONS):
                         fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
 
                     Son.FIN_PARTIE.play()
                     Son.QUESTION.stop()
+                    fenetre.hide()
+
                     temps_restant = 60
                     afficher_images('echec', 3000)
-                    questions, prochaine_question = reinitialiser_jeu(fenetre)
+                    fenetre.un_hide()
+                    print(prochaine_question)
 
                     continue
 
         if event == 'CHANGER_QUESTION':
-            question_changee_succes = changer_question(compteur, prochaine_question,\
+            question_changee_succes = changer_question(compteur, prochaine_question,
                                                        questions, question_changee, fenetre, question_changee_succes)
 
+        elif event == 'BOUTON-ACTION':
+            decompte_actif, premiere_fois, temps_actuel, questions, question_changee, prochaine_question = \
+                bouton_action(fenetre, premiere_fois, prochaine_question, question_changee_succes, questions,
+                              temps_restant, question_changee)
 
-
-
-        if event == 'BOUTON-ACTION':
-            if (temps_restant != 60):
-                premiere_fois = False
-            if (not question_changee_succes):
-                fenetre['CHANGER_QUESTION'].update(disabled=False)
-
-            reinitialiser_bouton_action(fenetre, True)
-
-            temps_actuel = round(time.time())
-            decompte_actif = True
-
-            afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
-            Son.QUESTION.play()
         elif event == 'BOUTON-GAUCHE' or event == 'BOUTON-DROIT':
             if (event == 'BOUTON-GAUCHE' and fenetre['BOUTON-GAUCHE'].get_text() != questions[prochaine_question][0][
                 1]) or \
@@ -303,39 +377,15 @@ def programme_principal() -> None:
                         1]):
 
                 # le joueur a choisi la bonne réponse
-                fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vert_base64())
-                fenetre['MESSAGE'].update("")
-
-                questions[prochaine_question][1] = Indicateur.VERT
-                if (prochaine_question == compteur):
-                    compteur += 1
-
-                prochaine_question += 1
-
-                if prochaine_question < NB_QUESTIONS:
-                    afficher(fenetre, questions[prochaine_question][0], premiere_fois, prochaine_question)
-                elif 21 <= prochaine_question:
-                    decompte_actif = False
-                    fenetre.hide()
-                    effacer_question(fenetre)
-                    for i in range(NB_QUESTIONS):
-                        fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
-                        questions[i][1] = Indicateur.VIDE
-                    Son.QUESTION.stop()
-                    Son.VICTOIRE.play()
-                    temps_restant = 60
-                    afficher_images('succes', 3000)
-                    questions, prochaine_question = reinitialiser_jeu(fenetre)
-                    continue
-
-
-
-
+                prochaine_question, questions, compteur, premiere_fois, question_changee, decompte_actif, temps_restant = (
+                    bonne_reponse(fenetre, prochaine_question, questions, compteur, premiere_fois, question_changee,
+                                  decompte_actif, temps_restant))
+                print(len(questions))
+                continue
             else:
                 # le joueur a choisi la mauvais réponse
                 decompte_actif = False
                 effacer_question(fenetre)
-                fenetre['CHANGER_QUESTION'].update(disabled=True)
                 fenetre['MESSAGE'].update("")
 
                 for i in range(prochaine_question):
@@ -352,30 +402,12 @@ def programme_principal() -> None:
                 Son.ERREUR.play()
                 Son.QUESTION.stop()
 
-
-
-
         elif event == gui.WIN_CLOSED:
             decompte_actif = False
             quitter = True
 
     fenetre.close()
     del fenetre
-
-
-def reinitialiser_jeu(fenetre) -> tuple[list, int]:
-    reinitialiser_bouton_action(fenetre, False)
-    temps_restant = TEMPS_EPREUVE
-    fenetre['TEMPS'].update(str(temps_restant))
-    fenetre.un_hide()
-    questions = choisir_questions(NB_QUESTIONS)
-    prochaine_question = 0
-    return questions, prochaine_question
-
-
-def reinitialiser_bouton_action(fenetre, activation_bouton: bool) -> None:
-    fenetre['BOUTON-ACTION'].update(disabled=activation_bouton, visible=not activation_bouton)
-    fenetre['IMAGE-BOUTON-INACTIF'].update(visible=activation_bouton)
 
 
 if __name__ == '__main__':
