@@ -24,7 +24,7 @@ import pickle
 import random
 import time
 import sqlite3 as squirrel
-from typing import  Any
+from typing import Any
 
 import PySimpleGUI as gui
 from images import *
@@ -228,7 +228,6 @@ def reinitialiser_jeu(fenetre) -> tuple[list[Any], int, bool, bool, int, list[An
     for i in range(NB_QUESTIONS):
         fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
 
-    # questions, question_changee = choisir_questions(NB_QUESTIONS)
     questions = ([])
     question_changee = ([])
     prochaine_question = 0

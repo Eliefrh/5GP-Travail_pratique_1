@@ -108,8 +108,7 @@ class TestsMonsieurTartempion(unittest.TestCase):
         questions, _ = choisir_questions(21)
         question_changee_succes = False
         premier_affichage_question = True
-        (prochaine_question, questions, compteur, _, question_changee, decompte_actif, temps_restant,
-         question_changee_succes) = bonne_reponse(
+        (_, questions, _, _, _, _, _, _) = bonne_reponse(
             fenetre, prochaine_question, questions, compteur, premier_affichage_question,
             question_changee, decompte_actif, temps_restant, question_changee_succes
         )
@@ -123,12 +122,21 @@ class TestsMonsieurTartempion(unittest.TestCase):
         questions, question_changee = choisir_questions(NB_QUESTIONS)
         temps_restant = 60
         question_changee_succes = False
-        decompte_actif, premier_affichage_question, temps_actuel, questions, question_changee, prochaine_question = \
+        decompte_actif, _, _, _, _, _ = \
             bouton_action(fenetre, premier_affichage_question, prochaine_question, question_changee_succes, questions,
                           temps_restant, question_changee)
 
         # Le décompte doit s'activer
         self.assertTrue(decompte_actif)
+
+    def test_initialiser_temps(self):
+        """Vérifier la réinitialisation du temps à chaque nouvelle partie"""
+        fenetre = afficher_jeu()
+        temps = 60
+        _, _, _, _, _, _, _, temps_restant = reinitialiser_jeu(fenetre)
+
+        # le temps_restant doit etre egale a temps=60
+        self.assertEqual(temps, temps_restant)
 
 
 if __name__ == "__main__":
