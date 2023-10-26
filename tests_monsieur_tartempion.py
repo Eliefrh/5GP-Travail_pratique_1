@@ -60,15 +60,25 @@ class TestsMonsieurTartempion(unittest.TestCase):
         fenetre = afficher_jeu()
         question_changee_succes = False
 
-        changement_reussit = changer_question(compteur,prochaine_question,questions,\
-                                              question_changement,fenetre,question_changee_succes )
+        changement_reussit = changer_question(compteur,prochaine_question,questions,
+                                              question_changement, fenetre, question_changee_succes)
 
         self.assertTrue(changement_reussit)
 
 
+    def test_indicateur_jaune(self):
+        """S'assurer que si la question etait bien réussi (indicateur jaune), l'indicateur restera jaune apres avoir
+        mal repondu la meme question dans une autre essaie """
+
+        decompte_actif = False
+        fenetre = afficher_jeu()
+        prochaine_question = 0
+        questions, _ = choisir_questions(21)
+        questions[prochaine_question][1] = Indicateur.JAUNE
+        mauvaise_reponse(decompte_actif, fenetre, prochaine_question, questions)
 
 
-
+        self.assertEqual(questions[0][1], Indicateur.JAUNE)
 
 if __name__ == "__main__":
     unittest.main()
