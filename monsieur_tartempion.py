@@ -72,6 +72,7 @@ def charger_images_de_pickle():
     else:
         print("Le fichier cornichon n'existe pas.")
 
+
 def afficher_images(objet: str, temps: int) -> None:
     """Affiche une fenêtre avec une image en fonction de l'objet donné.
 
@@ -200,18 +201,18 @@ def melanger_reponses(reponses: tuple, premiere_fois: bool, numero_question: int
      - on verifie cela par la boolean premiere fois et le numero de la question
      - on stock l'ordre des reponses a partir de leur boolean dans une liste
      - on revient chercher la position dans la liste si ce nest pas la premiere fois pour cette question"""
-    if (numero_question + 1 > len(ordre_affichage)):
+    if numero_question + 1 > len(ordre_affichage):
         premiere_fois = True
-    if (premiere_fois):
+    if premiere_fois:
         ordre = bool(random.getrandbits(1))
 
         ordre_affichage.append(ordre)
         return (reponses[0], reponses[1]) if ordre else (reponses[1], reponses[0])
     else:
-        if (ordre_affichage[numero_question] == True):
-            return (reponses[0], reponses[1])
+        if ordre_affichage[numero_question]:
+            return reponses[0], reponses[1]
         else:
-            return (reponses[1], reponses[0])
+            return reponses[1], reponses[0]
 
 
 # Duplication élliminée

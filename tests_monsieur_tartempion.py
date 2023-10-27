@@ -139,6 +139,20 @@ class TestsMonsieurTartempion(unittest.TestCase):
         # le temps_restant doit etre egale a temps=60
         self.assertEqual(temps, temps_restant)
 
+    def test_bouton_changer_question_desactive(self):
+        """Vérifier que le bouton changer question est désactiver apres le changement d'une question """
+
+        compteur = 0
+        prochaine_question = 0
+        fenetre = afficher_jeu()
+        questions, question_changement = choisir_questions(21)
+        changer_question(compteur, prochaine_question,
+                         questions, question_changement, fenetre,
+                         premier_affichage_question)
+        fenetre = afficher_jeu()
+
+        self.assertTrue(fenetre['CHANGER_QUESTION'].Disabled)
+
 
 if __name__ == "__main__":
     unittest.main()
