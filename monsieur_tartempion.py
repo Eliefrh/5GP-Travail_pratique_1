@@ -20,6 +20,7 @@ Ressources sous licences:
   par Erokia, 2020-12-26
   Licence: https://creativecommons.org/licenses/by-nc/4.0/
 """
+import os
 import pickle
 import random
 import time
@@ -57,11 +58,19 @@ with open('images.pickle', 'wb') as fichier_pickle:
 
 
 def charger_images_de_pickle():
-    """Charge les images depuis le fichier pickle."""
-    with open('images.pickle', 'rb') as fichier_pickle:
-        images_base64 = pickle.load(fichier_pickle)
-    return images_base64
+    """Charge les images depuis le fichier pickle et vérifier l'intégrité du fichier cornichon avant de les charger"""
+    if os.path.exists('images.pickle'):
+        with open('images.pickle', 'rb') as fichier_pickle:
+            try:
+                images_base64 = pickle.load(fichier_pickle)
+                return images_base64
+            except (pickle.UnpicklingError, EOFError):
+                print("Erreur : Le fichier cornichon est corrompu.")
+            else:
+                print("Le fichier cornichon est valide.")
 
+    else:
+        print("Le fichier cornichon n'existe pas.")
 
 def afficher_images(objet: str, temps: int) -> None:
     """Affiche une fenêtre avec une image en fonction de l'objet donné.
@@ -91,6 +100,8 @@ def afficher_images(objet: str, temps: int) -> None:
 
 
 def afficher_jeu():
+    """Afficher la fenetre de jeu """
+
     gui.theme('Black')
 
     message_label = [gui.Text('', key='MESSAGE', font=police_etiquettes, text_color='red', size=(30, 1))]
@@ -130,6 +141,7 @@ def afficher_jeu():
     indicateurs = \
         [gui.Image(data=indicateur_vide_base64(), key=f'INDICATEUR-{i}', pad=(4, 10)) for i in range(NB_QUESTIONS)]
 
+    # Liste de tout les composants d'affichage
     layout = [
         titre,
         temps,
@@ -147,6 +159,7 @@ def afficher_jeu():
 
 
 def charger_questions(fichier_db: str) -> list:
+    """Changer les questions à partir du fichier questions.bd"""
     try:
         connexion = squirrel.connect(fichier_db)
 
@@ -159,19 +172,23 @@ def charger_questions(fichier_db: str) -> list:
         return toutes_questions
     finally:
         if connexion:
+            # Fermer la connexion
             connexion.close()
 
 
 def choisir_questions(nombre_de_questions: int) -> list:
+    """Choisir un nombre déterminé de questions"""
     toutes_les_questions = charger_questions("questions.bd")
 
     random.shuffle(toutes_les_questions)
 
     questions_selectionnees = []
+    # On s'assure que le nombre de questions choisies ne dépasse pas le nombre de questions dans la BD
     for i in range(min(nombre_de_questions, len(toutes_les_questions))):
         questions_selectionnees.append([toutes_les_questions[i], Indicateur.VIDE])
 
     question_changement = []
+    # Charger la question de changement (la question 22)
     if len(toutes_les_questions) > nombre_de_questions:
         question_changement = [[toutes_les_questions[nombre_de_questions], Indicateur.VIDE]]
 
@@ -183,20 +200,18 @@ def melanger_reponses(reponses: tuple, premiere_fois: bool, numero_question: int
      - on verifie cela par la boolean premiere fois et le numero de la question
      - on stock l'ordre des reponses a partir de leur boolean dans une liste
      - on revient chercher la position dans la liste si ce nest pas la premiere fois pour cette question"""
-    # if (numero_question + 1 > len(ordre_affichage)):
-    #     premiere_fois = True
-    # if (premiere_fois):
-    #     ordre = bool(random.getrandbits(1))
-    #
-    #     ordre_affichage.append(ordre)
-    #     return (reponses[0], reponses[1]) if ordre else (reponses[1], reponses[0])
-    # else:
-    #     if (ordre_affichage[numero_question] == True):
-    #         return (reponses[0], reponses[1])
-    #     else:
-    #         return (reponses[1], reponses[0])
+    if (numero_question + 1 > len(ordre_affichage)):
+        premiere_fois = True
+    if (premiere_fois):
+        ordre = bool(random.getrandbits(1))
 
-    return reponses[0], reponses[1]
+        ordre_affichage.append(ordre)
+        return (reponses[0], reponses[1]) if ordre else (reponses[1], reponses[0])
+    else:
+        if (ordre_affichage[numero_question] == True):
+            return (reponses[0], reponses[1])
+        else:
+            return (reponses[1], reponses[0])
 
 
 # Duplication élliminée
@@ -206,10 +221,9 @@ def mettre_a_jour_widgets(fenetre: gui.Window, reponses: tuple, bouton_est_actif
     fenetre['BOUTON-DROIT'].update(reponses[1], disabled=bouton_est_actif, visible=True)
 
 
-def afficher(fenetre: gui.Window, question: tuple, premiere_fois: bool, numero_questoin: int) -> None:
+def afficher_question(fenetre: gui.Window, question: tuple, premiere_fois: bool, numero_questoin: int) -> None:
     fenetre['QUESTION'].update(question[0])
     reponses = melanger_reponses((question[1], question[2]), premiere_fois, numero_questoin)
-    # reponses = question[1], question[2]
     mettre_a_jour_widgets(fenetre, reponses, False, 'white')
 
 
@@ -219,6 +233,7 @@ def effacer_question(fenetre: gui.Window) -> None:
 
 
 def reinitialiser_jeu(fenetre) -> tuple[list[Any], int, bool, bool, int, list[Any], bool, int]:
+    """Rénitialiser les paramètres afin de débuter une nouvelle partie"""
     reinitialiser_bouton_action(fenetre, False)
     temps_restant = TEMPS_EPREUVE
     fenetre['TEMPS'].update(str(temps_restant))
@@ -227,6 +242,7 @@ def reinitialiser_jeu(fenetre) -> tuple[list[Any], int, bool, bool, int, list[An
     for i in range(NB_QUESTIONS):
         fenetre[f'INDICATEUR-{i}'].update(data=indicateur_vide_base64())
 
+    # Vider les 2 listes pour en recharger d'autres
     questions = ([])
     question_changee = ([])
     prochaine_question = 0
@@ -245,10 +261,13 @@ def reinitialiser_bouton_action(fenetre, activation_bouton: bool) -> None:
 
 def changer_question(compteur: int, prochaine_question: int, questions: tuple,
                      question_changee: tuple, fenetre: gui.Window, premier_affichage_question) -> bool:
+    """Nouvelle fonctionalité"""
     if compteur == prochaine_question:
+        # 1- Effacer la question courante de la liste
         questions.pop(prochaine_question)
+        # 2- Ajouter la nouvelle question à la fin de la liste
         questions.append(question_changee[0])
-        afficher(fenetre, questions[prochaine_question][0], premier_affichage_question, prochaine_question)
+        afficher_question(fenetre, questions[prochaine_question][0], premier_affichage_question, prochaine_question)
         fenetre['CHANGER_QUESTION'].update(disabled=True)
         fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vide_base64())
         question_changee_succes = True
@@ -256,6 +275,8 @@ def changer_question(compteur: int, prochaine_question: int, questions: tuple,
         return question_changee_succes
 
     else:
+        # Empêcher le changement des questions déjà réussies
+        # message d'avertissement
         fenetre['MESSAGE'].update("Vous avez déjà réussi cette question!")
         question_changee_succes = False
         return question_changee_succes
@@ -263,6 +284,7 @@ def changer_question(compteur: int, prochaine_question: int, questions: tuple,
 
 def bouton_action(fenetre, premier_affichage_question, prochaine_question, question_changee_succes, questions,
                   temps_restant, question_changee):
+    """Mettre à jour le bouton action + bouton CHANGER_QUESTION tout les composants nécéssaires"""
     if temps_restant != 60:
         premier_affichage_question = False
 
@@ -277,7 +299,7 @@ def bouton_action(fenetre, premier_affichage_question, prochaine_question, quest
     reinitialiser_bouton_action(fenetre, True)
     temps_actuel = round(time.time())
     decompte_actif = True
-    afficher(fenetre, questions[prochaine_question][0], premier_affichage_question, prochaine_question)
+    afficher_question(fenetre, questions[prochaine_question][0], premier_affichage_question, prochaine_question)
     Son.QUESTION.play()
 
     return decompte_actif, premier_affichage_question, temps_actuel, questions, question_changee, prochaine_question
@@ -285,6 +307,7 @@ def bouton_action(fenetre, premier_affichage_question, prochaine_question, quest
 
 def bonne_reponse(fenetre, prochaine_question, questions, compteur, premier_affichage_question,
                   question_changee, decompte_actif, temps_restant, question_changee_succes):
+    """Question réussie indicateur vert"""
     fenetre[f'INDICATEUR-{prochaine_question}'].update(data=indicateur_vert_base64())
     fenetre['MESSAGE'].update("")
 
@@ -295,7 +318,7 @@ def bonne_reponse(fenetre, prochaine_question, questions, compteur, premier_affi
     prochaine_question += 1
 
     if prochaine_question < NB_QUESTIONS:
-        afficher(fenetre, questions[prochaine_question][0], premier_affichage_question, prochaine_question)
+        afficher_question(fenetre, questions[prochaine_question][0], premier_affichage_question, prochaine_question)
     elif NB_QUESTIONS <= prochaine_question:
 
         fenetre.hide()
@@ -320,6 +343,7 @@ def bonne_reponse(fenetre, prochaine_question, questions, compteur, premier_affi
 
 
 def mauvaise_reponse(fenetre, prochaine_question, questions):
+    """Question échoué -> indicateur rouge seulement à la dernière question échouée"""
     decompte_actif = False
     effacer_question(fenetre)
     fenetre['CHANGER_QUESTION'].update(disabled=True)
@@ -347,7 +371,7 @@ def gerer_fermeture_fenetre():
 def gestion_temps(temps_actuel, temps_restant, prochaine_question, decompte_actif, fenetre, question_changee_succes):
     dernier_temps = temps_actuel
     temps_actuel = round(time.time())
-
+    """Gérer le temps du fonctionnement du programme"""
     if dernier_temps != temps_actuel:
         temps_restant -= 1
         fenetre['TEMPS'].update(str(temps_restant))
@@ -369,6 +393,7 @@ def gestion_temps(temps_actuel, temps_restant, prochaine_question, decompte_acti
 
 
 def programme_principal() -> None:
+    """Appel de tout les fonctions selon la logique du programme"""
     temps_restant = 60
     prochaine_question = 0
     compteur = 0
@@ -432,5 +457,6 @@ def programme_principal() -> None:
 if __name__ == '__main__':
     try:
         programme_principal()
+    # Gérer l'exception KeyboardInterrupt
     except KeyboardInterrupt:
         print("Le programme a été arrêté par l'utilisateur.")
